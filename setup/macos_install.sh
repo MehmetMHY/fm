@@ -1,3 +1,5 @@
+# NOTE: make sure to install NodeJS and Brew
+
 # https://github.com/mvdan/sh
 brew install shfmt
 

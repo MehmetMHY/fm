@@ -2,9 +2,7 @@
 
 ## Overview
 
-**fm** is a CLI tool currently in early development, designed to format scripts across various projects. This tool offers more control over formatting compared to relying on an IDE. While it's still in development, it's fully usable!
-
-If you're interested in contributing, feel free to fork the repo and submit a PR.
+**fm** is a CLI tool currently in early development, designed to format scripts across various projects. This tool offers more control over formatting compared to relying on an IDE. While it's still in development, it's fully usable! If you're interested in contributing, feel free to fork the repo and submit a PR.
 
 ## Supported File Formats
 
