@@ -134,4 +134,13 @@ main() {
 }
 
 # main function calls
-main "$1"
+if [ -z "$1" ]; then
+	read -p "Use current dir (hit ENTER to continue)? " confirm
+	if [[ $confirm =~ ^[Yy]$ || $confirm == "" ]]; then
+		main "."
+	else
+		exit 0
+	fi
+else
+	main "$1"
+fi
