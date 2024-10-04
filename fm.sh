@@ -87,6 +87,89 @@ format_javascript() {
 	fi
 }
 
+format_clang() {
+	local path="$1"
+	if ! command -v clang-format &>/dev/null; then
+		echo -e "${RED}Error: clang-format is not installed. Please install clang-format and try again.${NC}"
+		return 1
+	fi
+
+	# function to format a single file
+	format_file() {
+		local file="$1"
+		if clang-format -i "$file"; then
+			echo -e "${GREEN}Formatted:${NC} $file"
+		else
+			echo -e "${RED}Error formatting:${NC} $file"
+		fi
+	}
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting C/C++/Obj-C/Java files in directory:${NC} $path"
+		find "$path" -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print0 | while IFS= read -r -d '' file; do
+			format_file "$file"
+		done
+	elif [[ -f "$path" ]]; then
+		case "$path" in
+		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
+			echo -e "${BLUE}Formatting file:${NC} $path"
+			format_file "$path"
+			;;
+		*)
+			echo -e "${RED}Error: File '$path' is not a supported C, C++, Obj-C, or Java file.${NC}"
+			return 1
+			;;
+		esac
+	else
+		echo -e "${RED}Error: Path '$path' does not exist.${NC}"
+		return 1
+	fi
+}
+
+has_bash_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.sh" -o -name "*.zsh" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.sh || "$path" == *.zsh ]]
+	else
+		return 1
+	fi
+}
+
+has_python_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f -name "*.py" -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.py ]]
+	else
+		return 1
+	fi
+}
+
+has_js_json_md_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.md" -o -name "*.html" -o -name "*.css" -o -name "*.yml" -o -name "*.yaml" -o -name "*.graphql" -o -name "*.vue" -o -name "*.scss" -o -name "*.less" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.js || "$path" == *.json || "$path" == *.md ]]
+	else
+		return 1
+	fi
+}
+
+has_clang_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.c || "$path" == *.cpp || "$path" == *.h || "$path" == *.hpp || "$path" == *.m || "$path" == *.mm || "$path" == *.java ]]
+	else
+		return 1
+	fi
+}
+
 main() {
 	local path="$1"
 
@@ -100,17 +183,29 @@ main() {
 	echo
 
 	if [[ -d "$path" ]]; then
-		echo -e "${GREEN}Formatting Bash/Zsh files${NC}"
-		format_bash "$path"
-		echo
+		if has_bash_files "$path"; then
+			echo -e "${GREEN}Formatting Bash/Zsh files${NC}"
+			format_bash "$path"
+			echo
+		fi
 
-		echo -e "${GREEN}Formatting Python files${NC}"
-		format_python "$path"
-		echo
+		if has_python_files "$path"; then
+			echo -e "${GREEN}Formatting Python files${NC}"
+			format_python "$path"
+			echo
+		fi
 
-		echo -e "${GREEN}Formatting JavaScript/JSON/Markdown files${NC}"
-		format_javascript "$path"
-		echo
+		if has_js_json_md_files "$path"; then
+			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown files${NC}"
+			format_javascript "$path"
+			echo
+		fi
+
+		if has_clang_files "$path"; then
+			echo -e "${GREEN}Formatting C/C++/Obj-C/Java files${NC}"
+			format_clang "$path"
+			echo
+		fi
 	elif [[ -f "$path" ]]; then
 		case "$path" in
 		*.sh | *.zsh)
@@ -124,6 +219,10 @@ main() {
 		*.js | *.json | *.md)
 			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown file${NC}"
 			format_javascript "$path"
+			;;
+		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
+			echo -e "${GREEN}Formatting C/C++/Obj-C/Java file${NC}"
+			format_clang "$path"
 			;;
 		*)
 			echo -e "${RED}Error: Unsupported file type.${NC}"
