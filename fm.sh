@@ -72,7 +72,12 @@ format_javascript() {
 	fi
 	if [[ -d "$path" ]]; then
 		echo -e "${BLUE}Formatting JavaScript/JSON/Markdown files in directory:${NC} $path"
-		prettier --write "$path/**/*.{js,json,md,jsx,html,css}"
+		output=$(prettier --write "$path/**/*.{js,jsx,ts,tsx,json,md,html,css,yml,yaml,graphql,vue,scss,less}" 2>&1)
+		if [[ $output == *"No files matching the pattern were found"* ]]; then
+			echo "No Prettier supported files found"
+		else
+			echo "$output"
+		fi
 	elif [[ -f "$path" && ("$path" == *.js || "$path" == *.json || "$path" == *.md) ]]; then
 		echo -e "${BLUE}Formatting file:${NC} $path"
 		prettier --write "$path"
