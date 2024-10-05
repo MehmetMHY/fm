@@ -9,7 +9,9 @@
 ```bash
 .py
 .sh
-.zsh
+.bash
+.dash
+.ksh
 .js
 .jsx
 .ts
@@ -37,7 +39,7 @@
 
 ### [shfmt](https://github.com/mvdan/sh)
 
-The shfmt formatter is used to format shell scripts. In fm, it's used to format **.zsh** and **.sh** files. To install shfmt, check out their [GitHub Repo](https://github.com/mvdan/sh) or install it using [HomeBrew](https://brew.sh/):
+The shfmt formatter is used to format shell scripts. In fm, it's used to format **.sh**, **.bash**, **.dash**, and **.ksh** files. To install shfmt, check out their [GitHub Repo](https://github.com/mvdan/sh) or install it using [HomeBrew](https://brew.sh/):
 
 ```bash
 brew install shfmt

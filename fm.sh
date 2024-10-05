@@ -18,10 +18,10 @@ format_bash() {
 		fi
 	}
 
-	# reformat all .sh and .zsh files in a directory
+	# reformat all supported shell script files in a directory
 	reformat_shell_scripts() {
 		local directory="$1"
-		find "$directory" -type d -name "node_modules" -prune -o -type f \( -name "*.sh" -o -name "*.zsh" \) -print | while read -r file; do
+		find "$directory" -type d -name "node_modules" -prune -o -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print | while read -r file; do
 			reformat_file "$file"
 		done
 	}
@@ -34,10 +34,10 @@ format_bash() {
 	if [[ -d "$path" ]]; then
 		reformat_shell_scripts "$path"
 	elif [[ -f "$path" ]]; then
-		if [[ "$path" == *.sh || "$path" == *.zsh ]]; then
+		if [[ "$path" == *.sh || "$path" == *.bash || "$path" == *.dash || "$path" == *.ksh || "$path" == *.zsh ]]; then
 			reformat_file "$path"
 		else
-			echo -e "${RED}Error: File '$path' is not a .sh or .zsh file.${NC}"
+			echo -e "${RED}Error: File '$path' is not a supported shell script file.${NC}"
 			return 1
 		fi
 	else
@@ -129,9 +129,9 @@ format_clang() {
 has_bash_files() {
 	local path="$1"
 	if [[ -d "$path" ]]; then
-		[[ -n $(find "$path" -type f \( -name "*.sh" -o -name "*.zsh" \) -print -quit) ]]
+		[[ -n $(find "$path" -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print -quit) ]]
 	elif [[ -f "$path" ]]; then
-		[[ "$path" == *.sh || "$path" == *.zsh ]]
+		[[ "$path" == *.sh || "$path" == *.bash || "$path" == *.dash || "$path" == *.ksh || "$path" == *.zsh ]]
 	else
 		return 1
 	fi
@@ -208,8 +208,8 @@ main() {
 		fi
 	elif [[ -f "$path" ]]; then
 		case "$path" in
-		*.sh | *.zsh)
-			echo -e "${GREEN}Formatting Bash/Zsh file${NC}"
+		*.sh | *.bash | *.dash | *.ksh | *.zsh)
+			echo -e "${GREEN}Formatting shell script file${NC}"
 			format_bash "$path"
 			;;
 		*.py)
