@@ -179,50 +179,60 @@ main() {
 		return 1
 	fi
 
+	local resolved_path=$(realpath "$path")
+	
+	if [[ "$resolved_path" == "/" || "$resolved_path" == "$HOME" ]]; then
+		read -p "You are about to run on '$resolved_path'. Are you sure? (y/N): " confirm
+		if [[ ! $confirm =~ ^[Yy]$ ]]; then
+			echo -e "${RED}Operation cancelled!${NC}"
+			return 1
+		fi
+	fi
+
 	echo -e "${YELLOW}Starting code formatting...${NC}"
 	echo
 
-	if [[ -d "$path" ]]; then
-		if has_bash_files "$path"; then
+	if [[ -d "$resolved_path" ]]; then
+		if has_bash_files "$resolved_path"; then
 			echo -e "${GREEN}Formatting Bash/Zsh files${NC}"
-			format_bash "$path"
+			format_bash "$resolved_path"
 			echo
 		fi
 
-		if has_python_files "$path"; then
+		if has_python_files "$resolved_path"; then
 			echo -e "${GREEN}Formatting Python files${NC}"
-			format_python "$path"
+			format_python "$resolved_path"
 			echo
 		fi
 
-		if has_js_json_md_files "$path"; then
+		if has_js_json_md_files "$resolved_path"; then
 			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown files${NC}"
-			format_javascript "$path"
+			format_javascript "$resolved_path"
 			echo
 		fi
 
-		if has_clang_files "$path"; then
+		if has_clang_files "$resolved_path"; then
 			echo -e "${GREEN}Formatting C/C++/Obj-C/Java files${NC}"
-			format_clang "$path"
+			format_clang "$resolved_path"
 			echo
 		fi
-	elif [[ -f "$path" ]]; then
-		case "$path" in
+	elif [[ -f "$resolved_path" ]]; then
+		case "$resolved_path" in
 		*.sh | *.bash | *.dash | *.ksh | *.zsh)
 			echo -e "${GREEN}Formatting shell script file${NC}"
-			format_bash "$path"
+			format_bash "$resolved_path"
 			;;
 		*.py)
 			echo -e "${GREEN}Formatting Python file${NC}"
-			format_python "$path"
+			format_python "$resolved_path"
 			;;
 		*.js | *.json | *.md)
 			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown file${NC}"
-			format_javascript "$path"
+			format_javascript "$resolved_path"
 			;;
 		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
 			echo -e "${GREEN}Formatting C/C++/Obj-C/Java file${NC}"
-			format_clang "$path"
+			format_clang "$resolved_path"
 			;;
 		*)
 			echo -e "${RED}Error: Unsupported file type.${NC}"
@@ -230,7 +240,7 @@ main() {
 			;;
 		esac
 	else
-		echo -e "${RED}Error: Path '$path' does not exist.${NC}"
+		echo -e "${RED}Error: Path '$resolved_path' does not exist.${NC}"
 		return 1
 	fi
 
