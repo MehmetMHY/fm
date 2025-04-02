@@ -8,15 +8,49 @@
 
 ## Installation
 
+### Quick Install
+
 ```bash
-bash setup.sh -i
+/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
 ```
+
+### Manual Install
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/MehmetMHY/fm.git
+   cd fm
+   ```
+
+2. Run the setup script:
+
+   ```bash
+   bash setup.sh -i
+   ```
 
 ## Uninstall
 
+### Quick Uninstall
+
 ```bash
-bash setup.sh -r
+/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
 ```
+
+### Manual Uninstall
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/MehmetMHY/fm.git
+   cd fm
+   ```
+
+2. Run the setup script:
+
+   ```bash
+   bash setup.sh -r
+   ```
 
 ## Supported File Formats
 
@@ -63,7 +97,7 @@ To format a single file:
 fm path/to/filename
 ```
 
-Format current directory by default
+Format current directory by default:
 
 ```bash
 fm
