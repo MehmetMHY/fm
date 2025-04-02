@@ -1,0 +1,326 @@
+#!/usr/bin/env bash
+
+# colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Check if the current directory (or target directory) is inside a git repository
+in_git_repo() {
+	git rev-parse --is-inside-work-tree &>/dev/null
+}
+
+# Checks if a file is ignored by git (and thus by .gitignore)
+is_ignored_by_git() {
+	local file="$1"
+	if in_git_repo; then
+		git check-ignore -q "$file" 2>/dev/null
+		return $?
+	else
+		# If not in a git repo, never mark as ignored
+		return 1
+	fi
+}
+
+format_bash() {
+	local path="$1"
+
+	# reformat a single file
+	reformat_file() {
+		local file_path="$1"
+		if is_ignored_by_git "$file_path"; then
+			echo -e "${YELLOW}Skipping ignored file:${NC} $file_path"
+			return
+		fi
+
+		if shfmt -w "$file_path"; then
+			echo -e "${GREEN}Reformatted:${NC} $file_path"
+		else
+			echo -e "${RED}Error formatting:${NC} $file_path"
+		fi
+	}
+
+	# reformat all supported shell script files in a directory
+	reformat_shell_scripts() {
+		local directory="$1"
+		find "$directory" -type d -name "node_modules" -prune -o -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print0 |
+			while IFS= read -r -d '' file; do
+				reformat_file "$file"
+			done
+	}
+
+	if ! command -v shfmt &>/dev/null; then
+		echo -e "${RED}Error: shfmt is not installed. Please install shfmt and try again.${NC}"
+		return 1
+	fi
+
+	if [[ -d "$path" ]]; then
+		reformat_shell_scripts "$path"
+	elif [[ -f "$path" ]]; then
+		if [[ "$path" == *.sh || "$path" == *.bash || "$path" == *.dash || "$path" == *.ksh || "$path" == *.zsh ]]; then
+			reformat_file "$path"
+		else
+			echo -e "${RED}Error: File '$path' is not a supported shell script file.${NC}"
+			return 1
+		fi
+	else
+		echo -e "${RED}Error: Path '$path' does not exist.${NC}"
+		return 1
+	fi
+}
+
+format_python() {
+	local path="$1"
+	if ! command -v black &>/dev/null; then
+		echo -e "${RED}Error: black is not installed. Please install black and try again.${NC}"
+		return 1
+	fi
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting Python files in directory:${NC} $path"
+		# Use black on the directory (black already respects .gitignore if in a git repo)
+		black "$path"
+	elif [[ -f "$path" && "$path" == *.py ]]; then
+		if is_ignored_by_git "$path"; then
+			echo -e "${YELLOW}Skipping ignored file:${NC} $path"
+			return
+		fi
+		echo -e "${BLUE}Formatting Python file:${NC} $path"
+		black "$path"
+	else
+		echo -e "${RED}Error: Path '$path' is not a Python file or directory.${NC}"
+		return 1
+	fi
+}
+
+format_javascript() {
+	local path="$1"
+	if ! command -v prettier &>/dev/null; then
+		echo -e "${RED}Error: prettier is not installed. Please install prettier and try again.${NC}"
+		return 1
+	fi
+
+	# Function to format a single file
+	format_js_file() {
+		local file="$1"
+		if is_ignored_by_git "$file"; then
+			echo -e "${YELLOW}Skipping ignored file:${NC} $file"
+			return
+		fi
+		prettier --write "$file"
+	}
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting JS/TS/JSON/Markdown/HTML/CSS/YML/YAML/GraphQL/Vue/SCSS/Less files in:${NC} $path"
+		# Prettier can handle multiple file types in one go
+		# If no files found, prettier will output a message
+		prettier_output=$(prettier --write "$path/**/*.{js,jsx,ts,tsx,json,md,html,css,yml,yaml,graphql,vue,scss,less}" 2>&1)
+		if [[ $prettier_output == *"No files matching the pattern were found"* ]]; then
+			echo "No Prettier-supported files found"
+		else
+			echo "$prettier_output"
+		fi
+	elif [[ -f "$path" && ("$path" == *.js || "$path" == *.json || "$path" == *.md) ]]; then
+		echo -e "${BLUE}Formatting file:${NC} $path"
+		format_js_file "$path"
+	else
+		echo -e "${RED}Error: Path '$path' is not a JS, JSON, or MD file or directory.${NC}"
+		return 1
+	fi
+}
+
+format_clang() {
+	local path="$1"
+	if ! command -v clang-format &>/dev/null; then
+		echo -e "${RED}Error: clang-format is not installed. Please install clang-format and try again.${NC}"
+		return 1
+	fi
+
+	# function to format a single file
+	format_file() {
+		local file="$1"
+		if is_ignored_by_git "$file"; then
+			echo -e "${YELLOW}Skipping ignored file:${NC} $file"
+			return
+		fi
+
+		if clang-format -i "$file"; then
+			echo -e "${GREEN}Formatted:${NC} $file"
+		else
+			echo -e "${RED}Error formatting:${NC} $file"
+		fi
+	}
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting C/C++/Obj-C/Java files in directory:${NC} $path"
+		find "$path" -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print0 |
+			while IFS= read -r -d '' file; do
+				format_file "$file"
+			done
+	elif [[ -f "$path" ]]; then
+		case "$path" in
+		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
+			echo -e "${BLUE}Formatting file:${NC} $path"
+			format_file "$path"
+			;;
+		*)
+			echo -e "${RED}Error: File '$path' is not a supported C/C++/Obj-C/Java file.${NC}"
+			return 1
+			;;
+		esac
+	else
+		echo -e "${RED}Error: Path '$path' does not exist.${NC}"
+		return 1
+	fi
+}
+
+has_bash_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.sh || "$path" == *.bash || "$path" == *.dash || "$path" == *.ksh || "$path" == *.zsh ]]
+	else
+		return 1
+	fi
+}
+
+has_python_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f -name "*.py" -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.py ]]
+	else
+		return 1
+	fi
+}
+
+has_js_json_md_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.md" -o -name "*.html" -o -name "*.css" -o -name "*.yml" -o -name "*.yaml" -o -name "*.graphql" -o -name "*.vue" -o -name "*.scss" -o -name "*.less" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.js || "$path" == *.json || "$path" == *.md ]]
+	else
+		return 1
+	fi
+}
+
+has_clang_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.c || "$path" == *.cpp || "$path" == *.h || "$path" == *.hpp || "$path" == *.m || "$path" == *.mm || "$path" == *.java ]]
+	else
+		return 1
+	fi
+}
+
+main() {
+	local path="$1"
+
+	if [[ -z "$path" ]]; then
+		echo -e "${RED}Error: Please provide a file or directory path.${NC}"
+		echo -e "Usage: $0 <file_or_directory_path>"
+		return 1
+	fi
+
+	local resolved_path
+	resolved_path=$(realpath "$path" 2>/dev/null)
+	if [[ $? -ne 0 ]]; then
+		echo -e "${RED}Error: Unable to resolve path '$path'.${NC}"
+		return 1
+	fi
+
+	# Safer handling: If user tries "/" or "$HOME", prompt strongly
+	if [[ "$resolved_path" == "/" ]]; then
+		echo -e "${RED}WARNING: You are about to run formatting on the entire root directory '/'. This could be dangerous!${NC}"
+		read -p "Are you ABSOLUTELY sure? (type 'YES' to continue): " confirm
+		if [[ "$confirm" != "YES" ]]; then
+			echo -e "${RED}Operation cancelled!${NC}"
+			return 1
+		fi
+	elif [[ "$resolved_path" == "$HOME" ]]; then
+		echo -e "${RED}WARNING: You are about to run formatting on your home directory '$HOME'. This could be very large and potentially unwanted!${NC}"
+		read -p "Are you sure? (y/N): " confirm
+		if [[ ! $confirm =~ ^[Yy]$ ]]; then
+			echo -e "${RED}Operation cancelled!${NC}"
+			return 1
+		fi
+	fi
+
+	echo -e "${YELLOW}Starting code formatting...${NC}"
+	echo
+
+	if [[ -d "$resolved_path" ]]; then
+		# Format directories by checking for each file type
+		if has_bash_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting Bash/Zsh files${NC}"
+			format_bash "$resolved_path"
+			echo
+		fi
+
+		if has_python_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting Python files${NC}"
+			format_python "$resolved_path"
+			echo
+		fi
+
+		if has_js_json_md_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown files${NC}"
+			format_javascript "$resolved_path"
+			echo
+		fi
+
+		if has_clang_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting C/C++/Obj-C/Java files${NC}"
+			format_clang "$resolved_path"
+			echo
+		fi
+	elif [[ -f "$resolved_path" ]]; then
+		# Format a single file based on its extension
+		case "$resolved_path" in
+		*.sh | *.bash | *.dash | *.ksh | *.zsh)
+			echo -e "${GREEN}Formatting shell script file${NC}"
+			format_bash "$resolved_path"
+			;;
+		*.py)
+			echo -e "${GREEN}Formatting Python file${NC}"
+			format_python "$resolved_path"
+			;;
+		*.js | *.json | *.md)
+			echo -e "${GREEN}Formatting JavaScript/JSON/Markdown file${NC}"
+			format_javascript "$resolved_path"
+			;;
+		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
+			echo -e "${GREEN}Formatting C/C++/Obj-C/Java file${NC}"
+			format_clang "$resolved_path"
+			;;
+		*)
+			echo -e "${RED}Error: Unsupported file type.${NC}"
+			return 1
+			;;
+		esac
+	else
+		echo -e "${RED}Error: Path '$resolved_path' does not exist.${NC}"
+		return 1
+	fi
+
+	echo -e "${YELLOW}Formatting complete!${NC}"
+}
+
+# main function calls
+if [ -z "$1" ]; then
+	read -p "Use current dir (hit ENTER to continue)? " confirm
+	if [[ $confirm =~ ^[Yy]$ || $confirm == "" ]]; then
+		main "."
+	else
+		exit 0
+	fi
+else
+	main "$1"
+fi
