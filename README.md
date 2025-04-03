@@ -6,52 +6,6 @@
 
 **fm** is a CLI tool currently in early development, designed to format scripts across various projects. This tool offers more control over formatting compared to relying on an IDE. While it's still in development, it's fully usable! If you're interested in contributing, feel free to fork the repo and submit a PR.
 
-## Installation
-
-### Quick Install
-
-```bash
-/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
-```
-
-### Manual Install
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/MehmetMHY/fm.git
-   cd fm
-   ```
-
-2. Run the setup script:
-
-   ```bash
-   bash setup.sh -i
-   ```
-
-## Uninstall
-
-### Quick Uninstall
-
-```bash
-/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
-```
-
-### Manual Uninstall
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/MehmetMHY/fm.git
-   cd fm
-   ```
-
-2. Run the setup script:
-
-   ```bash
-   bash setup.sh -r
-   ```
-
 ## Supported File Formats
 
 ```bash
@@ -82,6 +36,43 @@
 .mm
 .java
 ```
+
+## Installation
+
+### Quick Method
+
+1. Install **fm** by running this command:
+
+   ```bash
+   /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
+   ```
+
+2. (optional) Uninstall **fm**, if you desire, by running this command:
+
+   ```bash
+   /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
+   ```
+
+### Manual Method
+
+1. Clone the repository and go into it:
+
+   ```bash
+   git clone https://github.com/MehmetMHY/fm.git
+   cd fm
+   ```
+
+2. Run the main setup script to install **fm**:
+
+   ```bash
+   bash setup.sh -i
+   ```
+
+3. (optional) Uninstall **fm**, if you desire, by running the main script with the following parameter:
+
+   ```bash
+   bash setup.sh -r
+   ```
 
 ## Usage Instructions
 
