@@ -47,7 +47,9 @@
    /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
    ```
 
-2. (optional) Uninstall **fm**, if you desire, by running this command:
+2. (optional) If you want to update **fm**, just run the install command from earlier again.
+
+3. (optional) Uninstall **fm**, if you desire, by running this command:
 
    ```bash
    /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
@@ -62,7 +64,7 @@
    cd fm
    ```
 
-2. Run the main setup script to install **fm**:
+2. Run the main setup script to install and/or update **fm**:
 
    ```bash
    bash setup.sh -i

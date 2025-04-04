@@ -1,5 +1,18 @@
+*.o
+*.log
+*.sqlite
+*.sqlitedb
+*.tmp
+*.swp
+*~
+*.bak
+*.env
+*.DS_Store
+node_modules/
+vendor/
+*.old
+*.shellcheck
 env/
-.env
-.DS_Store
-.sandbox
+.sandbox/
+.lab/
 

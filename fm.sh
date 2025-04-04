@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
 
-# colors
+# terminal colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Check if the current directory (or target directory) is inside a git repository
+# check if the current directory (or target directory) is inside a git repository
 in_git_repo() {
 	git rev-parse --is-inside-work-tree &>/dev/null
 }
 
-# Checks if a file is ignored by git (and thus by .gitignore)
+# checks if a file is ignored by git (and thus by .gitignore)
 is_ignored_by_git() {
 	local file="$1"
 	if in_git_repo; then
 		git check-ignore -q "$file" 2>/dev/null
 		return $?
 	else
-		# If not in a git repo, never mark as ignored
 		return 1
 	fi
 }
@@ -114,8 +113,7 @@ format_javascript() {
 
 	if [[ -d "$path" ]]; then
 		echo -e "${BLUE}Formatting JS/TS/JSON/Markdown/HTML/CSS/YML/YAML/GraphQL/Vue/SCSS/Less files in:${NC} $path"
-		# Prettier can handle multiple file types in one go
-		# If no files found, prettier will output a message
+		# prettier can handle multiple file types in one go and if no files found, prettier will output a message
 		prettier_output=$(prettier --write "$path/**/*.{js,jsx,ts,tsx,json,md,html,css,yml,yaml,graphql,vue,scss,less}" 2>&1)
 		if [[ $prettier_output == *"No files matching the pattern were found"* ]]; then
 			echo "No Prettier-supported files found"
@@ -236,7 +234,7 @@ main() {
 		return 1
 	fi
 
-	# Safer handling: If user tries "/" or "$HOME", prompt strongly
+	# prompt user when the target directory is the root "/" directory
 	if [[ "$resolved_path" == "/" ]]; then
 		echo -e "${RED}WARNING: You are about to run formatting on the entire root directory '/'. This could be dangerous!${NC}"
 		read -p "Are you ABSOLUTELY sure? (type 'YES' to continue): " confirm
@@ -257,7 +255,7 @@ main() {
 	echo
 
 	if [[ -d "$resolved_path" ]]; then
-		# Format directories by checking for each file type
+		# format directories by checking for each file type
 		if has_bash_files "$resolved_path"; then
 			echo -e "${GREEN}Formatting Bash/Zsh files${NC}"
 			format_bash "$resolved_path"
@@ -282,7 +280,7 @@ main() {
 			echo
 		fi
 	elif [[ -f "$resolved_path" ]]; then
-		# Format a single file based on its extension
+		# format a single file based on its extension
 		case "$resolved_path" in
 		*.sh | *.bash | *.dash | *.ksh | *.zsh)
 			echo -e "${GREEN}Formatting shell script file${NC}"
