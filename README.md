@@ -44,7 +44,7 @@
 1. Install **fm** by running this command:
 
    ```bash
-   /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
+   sudo /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -i
    ```
 
 2. (optional) If you want to update **fm**, just run the install command from earlier again.
@@ -52,7 +52,7 @@
 3. (optional) Uninstall **fm**, if you desire, by running this command:
 
    ```bash
-   /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
+   sudo /bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/MehmetMHY/fm/refs/heads/main/setup.sh)" -s -r
    ```
 
 ### Manual Method
@@ -67,13 +67,21 @@
 2. Run the main setup script to install and/or update **fm**:
 
    ```bash
+   # run this command
    bash setup.sh -i
+
+   # (optional) if the command above fails, run this command:
+   sudo bash setup.sh -i
    ```
 
 3. (optional) Uninstall **fm**, if you desire, by running the main script with the following parameter:
 
    ```bash
+   # run this command
    bash setup.sh -r
+
+   # (optional) if the command above fails, run this command:
+   sudo bash setup.sh -r
    ```
 
 ## Usage Instructions
