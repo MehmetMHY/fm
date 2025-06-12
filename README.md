@@ -138,6 +138,35 @@ fm -I 'node_modules/*' -I 'dist/*' .
 fm --ignore '*.log' .
 ```
 
+#### Dry Run Mode (Check)
+
+To see which files would be changed without actually modifying them, use the `--check` or `-c` flag. This is useful for CI checks or pre-commit hooks.
+
+```bash
+# Check for files that need formatting
+fm --check .
+```
+
+#### Interactive Mode
+
+For more control, you can use interactive mode with `--interactive` or `-i`. The script will prompt you for each file before formatting.
+
+```bash
+# Run in interactive mode
+fm -i .
+```
+
+You will be prompted with `[y]es, [N]o, [a]ll, [q]uit`.
+
+#### Parallel Processing
+
+To speed up formatting on large projects, you can run the formatter on multiple files in parallel using the `--jobs` or `-j` flag.
+
+```bash
+# Run with 4 parallel jobs
+fm --jobs 4 .
+```
+
 ## Additional Information
 
 ### Formatters (Deep Dive)

@@ -15,4 +15,4 @@ vendor/
 env/
 .sandbox/
 .lab/
-
+assets/tests/*

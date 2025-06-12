@@ -10,6 +10,11 @@ NC='\033[0m'
 # options
 declare -a ignore_patterns=()
 declare -a languages_to_format=()
+DRY_RUN=false
+INTERACTIVE=false
+JOBS=1
+# A file to signal 'all' in interactive mode to child processes, if we go parallel with it.
+INTERACTIVE_ALL_FILE=""
 
 usage() {
 	echo "Usage: $0 [options] <file_or_directory_path>"
@@ -21,6 +26,9 @@ usage() {
 	echo "                          Available: bash, python, javascript, clang. Default: all."
 	echo "  -I, --ignore PATTERN    Ignore files or directories matching PATTERN (glob)."
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
+	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
+	echo "  -i, --interactive       Prompt before formatting each file."
+	echo "  -j, --jobs NUM          Number of parallel jobs to run. Defaults to 1."
 	echo "  -h, --help              Display this help message and exit."
 	echo
 	echo "If <file_or_directory_path> is not provided, it defaults to the current directory."
@@ -105,6 +113,26 @@ format_bash() {
 			return
 		fi
 
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file_path? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! shfmt -d "$file_path"; then
+				echo -e "${YELLOW}Would reformat:${NC} $file_path"
+			fi
+			return
+		fi
+
 		if shfmt -w "$file_path"; then
 			echo -e "${GREEN}Reformatted:${NC} $file_path"
 		else
@@ -118,10 +146,16 @@ format_bash() {
 		local -a prune_args
 		read -r -a prune_args <<<"$(build_prune_args "$directory")"
 
-		find "$directory" "${prune_args[@]}" -o -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print0 |
-			while IFS= read -r -d '' file; do
-				reformat_file "$file"
-			done
+		local find_cmd=(find "$directory" "${prune_args[@]}" -o -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do reformat_file "$file"; done
+		else
+			export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'reformat_file "{}"'
+		fi
 	}
 
 	if ! command -v shfmt &>/dev/null; then
@@ -154,6 +188,27 @@ format_python_file() {
 		echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
 		return
 	fi
+
+	if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+		read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+		case "$choice" in
+		y | Y) ;;
+		a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+		q | Q) exit 0 ;;
+		*)
+			echo "Skipping."
+			return
+			;;
+		esac
+	fi
+
+	if $DRY_RUN; then
+		if ! black --check --diff "$file"; then
+			echo -e "${YELLOW}Would reformat:${NC} $file"
+		fi
+		return
+	fi
+
 	echo -e "${BLUE}Formatting Python file:${NC} $file"
 	black "$file"
 }
@@ -170,10 +225,16 @@ format_python() {
 		local -a prune_args
 		read -r -a prune_args <<<"$(build_prune_args "$path")"
 
-		find "$path" "${prune_args[@]}" -o -type f -name "*.py" -print0 |
-			while IFS= read -r -d '' file; do
-				format_python_file "$file"
-			done
+		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.py" -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_python_file "$file"; done
+		else
+			export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_python_file "{}"'
+		fi
 	elif [[ -f "$path" && "$path" == *.py ]]; then
 		format_python_file "$path"
 	else
@@ -200,6 +261,27 @@ format_javascript() {
 			echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
 			return
 		fi
+
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! prettier --check "$file"; then
+				echo -e "${YELLOW}Would reformat:${NC} $file"
+			fi
+			return
+		fi
+
 		prettier --write "$file" --log-level warn
 	}
 
@@ -225,14 +307,18 @@ format_javascript() {
 				name_args+=(-o -name "*.$ext")
 			fi
 		done
-		find_args+=(\()
-		find_args+=("${name_args[@]}")
-		find_args+=(\))
+		find_args+=(\( "${name_args[@]}" \))
 
-		find "${find_args[@]}" -print0 |
-			while IFS= read -r -d '' file; do
-				format_js_file "$file"
-			done
+		local find_cmd=(find "${find_args[@]}" -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_js_file "$file"; done
+		else
+			export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_js_file "{}"'
+		fi
 	elif [[ -f "$path" ]]; then
 		is_supported=false
 		for ext in $(echo "$prettier_extensions" | tr ',' ' '); do
@@ -273,6 +359,27 @@ format_clang() {
 			return
 		fi
 
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! clang-format "$file" | diff -q "$file" - >/dev/null; then
+				echo -e "${YELLOW}Changes detected in:${NC} $file"
+				clang-format "$file" | diff -u "$file" -
+			fi
+			return
+		fi
+
 		if clang-format -i "$file"; then
 			echo -e "${GREEN}Formatted:${NC} $file"
 		else
@@ -285,10 +392,16 @@ format_clang() {
 		local -a prune_args
 		read -r -a prune_args <<<"$(build_prune_args "$path")"
 
-		find "$path" "${prune_args[@]}" -o -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print0 |
-			while IFS= read -r -d '' file; do
-				format_file "$file"
-			done
+		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_file "$file"; done
+		else
+			export -f format_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_file "{}"'
+		fi
 	elif [[ -f "$path" ]]; then
 		case "$path" in
 		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
@@ -373,7 +486,7 @@ main() {
 	fi
 
 	local options
-	options=$(getopt -o hl:I: --long help,languages:,ignore: -n "$0" -- "$@")
+	options=$(getopt -o hcil:I:j: --long help,check,interactive,languages:,ignore:,jobs: -n "$0" -- "$@")
 	if [ $? -ne 0 ]; then
 		usage
 		return 1
@@ -386,6 +499,18 @@ main() {
 		-h | --help)
 			usage
 			return 0
+			;;
+		-c | --check)
+			DRY_RUN=true
+			shift
+			;;
+		-i | --interactive)
+			INTERACTIVE=true
+			shift
+			;;
+		-j | --jobs)
+			JOBS="$2"
+			shift 2
 			;;
 		-l | --languages)
 			IFS=',' read -r -a languages_to_format <<<"$2"
@@ -405,6 +530,23 @@ main() {
 			;;
 		esac
 	done
+
+	if $DRY_RUN && $INTERACTIVE; then
+		echo -e "${RED}Error: --check and --interactive options cannot be used together.${NC}"
+		return 1
+	fi
+
+	if $INTERACTIVE && [[ "$JOBS" -gt 1 ]]; then
+		echo -e "${YELLOW}Warning: Interactive mode is not compatible with parallel jobs. Forcing jobs to 1.${NC}"
+		JOBS=1
+	fi
+
+	if $INTERACTIVE; then
+		# Create a temp file to signal the 'all' option has been selected.
+		INTERACTIVE_ALL_FILE=$(mktemp)
+		# ensure the temp file is removed on exit
+		trap 'rm -f "$INTERACTIVE_ALL_FILE"' EXIT
+	fi
 
 	local path="$1"
 
