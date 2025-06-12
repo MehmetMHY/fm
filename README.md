@@ -167,6 +167,45 @@ To speed up formatting on large projects, you can run the formatter on multiple 
 fm --jobs 4 .
 ```
 
+#### Disabling `.gitignore`
+
+To format files that are listed in your `.gitignore` file, use the `--no-gitignore` flag.
+
+```bash
+# Format all files, including those in .gitignore
+fm --no-gitignore .
+```
+
+## Testing and Benchmarking
+
+For testing, debugging, or benchmarking `fm`, a helper script is provided at `assets/clone.sh`. This script clones a number of popular, open-source repositories into a `tests/` directory at the project root. These repositories contain a wide variety of languages and file structures, making them an ideal test bed.
+
+The cloned repositories are not tracked by Git.
+
+### Project Layout
+
+```bash
+.
+├── LICENSE
+├── README.md
+├── assets
+│   ├── clone.sh
+│   └── logo.png
+├── fm.sh
+└── setup.sh
+```
+
+### Running the Test Script
+
+To download the test repositories, you must first `cd` into the `assets` directory before running the script:
+
+```bash
+cd assets/
+bash clone.sh
+```
+
+This will create a `tests/` directory in the project's root, populated with the test repositories. You can then run `fm` on this directory to test its performance and accuracy.
+
 ## Additional Information
 
 ### Formatters (Deep Dive)
