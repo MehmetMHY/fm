@@ -13,6 +13,7 @@ declare -a languages_to_format=()
 DRY_RUN=false
 INTERACTIVE=false
 JOBS=1
+USE_GITIGNORE=true
 # A file to signal 'all' in interactive mode to child processes, if we go parallel with it.
 INTERACTIVE_ALL_FILE=""
 
@@ -29,6 +30,7 @@ usage() {
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
 	echo "  -i, --interactive       Prompt before formatting each file."
 	echo "  -j, --jobs NUM          Number of parallel jobs to run. Defaults to 1."
+	echo "      --no-gitignore      Do not respect .gitignore files."
 	echo "  -h, --help              Display this help message and exit."
 	echo
 	echo "If <file_or_directory_path> is not provided, it defaults to the current directory."
@@ -41,6 +43,9 @@ in_git_repo() {
 
 # checks if a file is ignored by git (and thus by .gitignore)
 is_ignored_by_git() {
+	if ! $USE_GITIGNORE; then
+		return 1 # Not ignored
+	fi
 	local file="$1"
 	if in_git_repo; then
 		git check-ignore -q "$file" 2>/dev/null
@@ -152,7 +157,7 @@ format_bash() {
 			"${find_cmd[@]}" | while IFS= read -r -d '' file; do reformat_file "$file"; done
 		else
 			export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
 			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'reformat_file "{}"'
 		fi
@@ -231,7 +236,7 @@ format_python() {
 			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_python_file "$file"; done
 		else
 			export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
 			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_python_file "{}"'
 		fi
@@ -315,7 +320,7 @@ format_javascript() {
 			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_js_file "$file"; done
 		else
 			export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
 			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_js_file "{}"'
 		fi
@@ -398,7 +403,7 @@ format_clang() {
 			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_file "$file"; done
 		else
 			export -f format_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path
+			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
 			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_file "{}"'
 		fi
@@ -486,7 +491,7 @@ main() {
 	fi
 
 	local options
-	options=$(getopt -o hcil:I:j: --long help,check,interactive,languages:,ignore:,jobs: -n "$0" -- "$@")
+	options=$(getopt -o hcil:I:j: --long help,check,interactive,languages:,ignore:,jobs:,no-gitignore -n "$0" -- "$@")
 	if [ $? -ne 0 ]; then
 		usage
 		return 1
@@ -519,6 +524,10 @@ main() {
 		-I | --ignore)
 			ignore_patterns+=("$2")
 			shift 2
+			;;
+		--no-gitignore)
+			USE_GITIGNORE=false
+			shift
 			;;
 		--)
 			shift
