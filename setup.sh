@@ -14,6 +14,13 @@ install_fm() {
 		echo "Error: Homebrew ('brew') is not installed. Install it from https://brew.sh/"
 		exit 1
 	fi
+	if [[ "$(uname)" == "Darwin" ]]; then
+		# Check if gnu-getopt is installed via brew. The fm script will guide the user to add it to their PATH.
+		if ! brew --prefix gnu-getopt >/dev/null 2>&1; then
+			echo "gnu-getopt not found, installing via Homebrew..."
+			brew install gnu-getopt
+		fi
+	fi
 	if ! command -v pip &>/dev/null; then
 		echo "Error: pip is not installed. Learn to install it from https://packaging.python.org/en/latest/tutorials/installing-packages/"
 		exit 1
