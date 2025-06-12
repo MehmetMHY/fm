@@ -14,7 +14,8 @@ DRY_RUN=false
 INTERACTIVE=false
 JOBS=1
 USE_GITIGNORE=true
-# A file to signal 'all' in interactive mode to child processes, if we go parallel with it.
+
+# file to signal 'all' in interactive mode to child processes, if we go parallel with it.
 INTERACTIVE_ALL_FILE=""
 
 usage() {
@@ -44,7 +45,8 @@ in_git_repo() {
 # checks if a file is ignored by git (and thus by .gitignore)
 is_ignored_by_git() {
 	if ! $USE_GITIGNORE; then
-		return 1 # Not ignored
+		# not ignored
+		return 1
 	fi
 	local file="$1"
 	if in_git_repo; then
@@ -255,7 +257,7 @@ format_javascript() {
 		return 1
 	fi
 
-	# Function to format a single file
+	# function to format a single file
 	format_js_file() {
 		local file="$1"
 		if is_ignored_by_git "$file"; then
@@ -477,7 +479,7 @@ has_clang_files() {
 }
 
 main() {
-	# Test for GNU getopt
+	# test for gnu getopt
 	getopt --test >/dev/null 2>&1
 	if [[ $? -ne 4 ]]; then
 		echo -e "${RED}Error: GNU getopt is not available or not in your PATH.${NC}" >&2
@@ -551,7 +553,7 @@ main() {
 	fi
 
 	if $INTERACTIVE; then
-		# Create a temp file to signal the 'all' option has been selected.
+		# create a temp file to signal the 'all' option has been selected.
 		INTERACTIVE_ALL_FILE=$(mktemp)
 		# ensure the temp file is removed on exit
 		trap 'rm -f "$INTERACTIVE_ALL_FILE"' EXIT
