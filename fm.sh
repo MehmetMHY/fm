@@ -12,11 +12,26 @@ declare -a ignore_patterns=()
 declare -a languages_to_format=()
 DRY_RUN=false
 INTERACTIVE=false
-JOBS=1
 USE_GITIGNORE=true
 
 # file to signal 'all' in interactive mode to child processes, if we go parallel with it.
 INTERACTIVE_ALL_FILE=""
+
+# determine the number of CPU cores for default workers
+if command -v getconf &>/dev/null && getconf _NPROCESSORS_ONLN &>/dev/null; then
+	WORKERS=$(getconf _NPROCESSORS_ONLN)
+else
+	WORKERS=2
+	if [[ "$(uname)" == "Linux" ]]; then
+		if command -v nproc &>/dev/null; then
+			WORKERS=$(nproc)
+		fi
+	elif [[ "$(uname)" == "Darwin" ]]; then
+		if command -v sysctl &>/dev/null; then
+			WORKERS=$(sysctl -n hw.ncpu)
+		fi
+	fi
+fi
 
 usage() {
 	echo "Usage: $0 [options] <file_or_directory_path>"
@@ -30,7 +45,7 @@ usage() {
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
 	echo "  -i, --interactive       Prompt before formatting each file."
-	echo "  -j, --jobs NUM          Number of parallel jobs to run. Defaults to 1."
+	echo "  -w, --workers NUM       Number of parallel workers to run. Defaults to the number of CPU cores."
 	echo "      --no-gitignore      Do not respect .gitignore files."
 	echo "  -h, --help              Display this help message and exit."
 	echo
@@ -161,7 +176,7 @@ format_bash() {
 			export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
 			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'reformat_file "{}"'
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "{}"'
 		fi
 	}
 
@@ -240,7 +255,7 @@ format_python() {
 			export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
 			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_python_file "{}"'
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "{}"'
 		fi
 	elif [[ -f "$path" && "$path" == *.py ]]; then
 		format_python_file "$path"
@@ -324,7 +339,7 @@ format_javascript() {
 			export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
 			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_js_file "{}"'
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "{}"'
 		fi
 	elif [[ -f "$path" ]]; then
 		is_supported=false
@@ -407,7 +422,7 @@ format_clang() {
 			export -f format_file is_ignored_by_git is_user_ignored in_git_repo
 			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
 			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$JOBS" -I{} bash -c 'format_file "{}"'
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "{}"'
 		fi
 	elif [[ -f "$path" ]]; then
 		case "$path" in
@@ -493,7 +508,7 @@ main() {
 	fi
 
 	local options
-	options=$(getopt -o hcil:I:j: --long help,check,interactive,languages:,ignore:,jobs:,no-gitignore -n "$0" -- "$@")
+	options=$(getopt -o hcil:I:w: --long help,check,interactive,languages:,ignore:,workers:,no-gitignore -n "$0" -- "$@")
 	if [ $? -ne 0 ]; then
 		usage
 		return 1
@@ -515,8 +530,8 @@ main() {
 			INTERACTIVE=true
 			shift
 			;;
-		-j | --jobs)
-			JOBS="$2"
+		-w | --workers)
+			WORKERS="$2"
 			shift 2
 			;;
 		-l | --languages)
@@ -547,9 +562,9 @@ main() {
 		return 1
 	fi
 
-	if $INTERACTIVE && [[ "$JOBS" -gt 1 ]]; then
-		echo -e "${YELLOW}Warning: Interactive mode is not compatible with parallel jobs. Forcing jobs to 1.${NC}"
-		JOBS=1
+	if $INTERACTIVE && [[ "$WORKERS" -gt 1 ]]; then
+		echo -e "${YELLOW}Warning: Interactive mode is not compatible with parallel workers. Forcing workers to 1.${NC}"
+		WORKERS=1
 	fi
 
 	if $INTERACTIVE; then
@@ -595,7 +610,7 @@ main() {
 		fi
 	fi
 
-	echo -e "${YELLOW}Starting code formatting...${NC}"
+	echo -e "${YELLOW}Starting code formatting with $WORKERS worker(s)...${NC}"
 	echo
 
 	local run_all=true

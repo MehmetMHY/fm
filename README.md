@@ -122,7 +122,7 @@ You can specify which languages to format using the `-l` or `--languages` flag. 
 Available languages: `bash`, `python`, `javascript`, `clang`.
 
 ```bash
-# Format only Python and Bash files in the current directory
+# format only Python and Bash files in the current directory
 fm -l python,bash .
 ```
 
@@ -131,10 +131,10 @@ fm -l python,bash .
 You can ignore specific files or directories using the `-I` or `--ignore` flag. You can use this flag multiple times. It accepts glob patterns.
 
 ```bash
-# Ignore the node_modules and dist directories
+# ignore the node_modules and dist directories
 fm -I 'node_modules/*' -I 'dist/*' .
 
-# Ignore all .log files
+# ignore all .log files
 fm --ignore '*.log' .
 ```
 
@@ -143,7 +143,7 @@ fm --ignore '*.log' .
 To see which files would be changed without actually modifying them, use the `--check` or `-c` flag. This is useful for CI checks or pre-commit hooks.
 
 ```bash
-# Check for files that need formatting
+# check for files that need formatting
 fm --check .
 ```
 
@@ -152,7 +152,7 @@ fm --check .
 For more control, you can use interactive mode with `--interactive` or `-i`. The script will prompt you for each file before formatting.
 
 ```bash
-# Run in interactive mode
+# run in interactive mode
 fm -i .
 ```
 
@@ -160,11 +160,11 @@ You will be prompted with `[y]es, [N]o, [a]ll, [q]uit`.
 
 #### Parallel Processing
 
-To speed up formatting on large projects, you can run the formatter on multiple files in parallel using the `--jobs` or `-j` flag.
+To speed up formatting on large projects, you can run the formatter on multiple files in parallel using the `--workers` or `-w` flag.
 
 ```bash
-# Run with 4 parallel jobs
-fm --jobs 4 .
+# run with 4 parallel workers
+fm --workers 4 .
 ```
 
 #### Disabling `.gitignore`
@@ -172,39 +172,9 @@ fm --jobs 4 .
 To format files that are listed in your `.gitignore` file, use the `--no-gitignore` flag.
 
 ```bash
-# Format all files, including those in .gitignore
+# format all files, including those in .gitignore
 fm --no-gitignore .
 ```
-
-## Testing and Benchmarking
-
-For testing, debugging, or benchmarking `fm`, a helper script is provided at `assets/clone.sh`. This script clones a number of popular, open-source repositories into a `tests/` directory at the project root. These repositories contain a wide variety of languages and file structures, making them an ideal test bed.
-
-The cloned repositories are not tracked by Git.
-
-### Project Layout
-
-```bash
-.
-├── LICENSE
-├── README.md
-├── assets
-│   ├── clone.sh
-│   └── logo.png
-├── fm.sh
-└── setup.sh
-```
-
-### Running the Test Script
-
-To download the test repositories, you must first `cd` into the `assets` directory before running the script:
-
-```bash
-cd assets/
-bash clone.sh
-```
-
-This will create a `tests/` directory in the project's root, populated with the test repositories. You can then run `fm` on this directory to test its performance and accuracy.
 
 ## Additional Information
 
@@ -241,3 +211,16 @@ The ClangFormat formatter is used to format C, C++, Obj-C, Java, JavaScript, and
 ```bash
 brew install clang-format
 ```
+
+## Testing and Benchmarking
+
+For testing, debugging, or benchmarking `fm`, a helper script is provided at `assets/clone.sh`. This script clones a number of popular, open-source repositories into a `tests/` directory at the project root. These repositories contain a wide variety of languages and file structures, making them an ideal test bed. The cloned repositories are not tracked by Git.
+
+To download the test repositories, you must first `cd` into the `assets` directory before running the script:
+
+```bash
+cd assets/
+bash clone.sh
+```
+
+This will create a `tests/` directory in the project's root, populated with the test repositories. You can then run `fm` on this directory to test its performance and accuracy.
