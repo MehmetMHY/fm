@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="250" src="./assets/logo.png">
+    <img width="250" src="./logo.png">
 </p>
 
 ## Overview
@@ -19,11 +19,19 @@ The `setup.sh` script will attempt to install these for you using `brew`, `pip`,
 
 On macOS, this script requires GNU `getopt`. The setup script will install it for you using Homebrew. You will then need to add it to your `PATH`. The `fm` script will guide you if your `PATH` is not correctly configured.
 
-Add the following line to your `~/.zshrc` or `~/.bash_profile`:
+To do this, first install `getopt` with Homebrew with this command:
+
+```bash
+brew install gnu-getopt
+```
+
+Then, add the following line to your `~/.zshrc` or `~/.bash_profile`:
 
 ```bash
 export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"
 ```
+
+Finally, make sure to source your `~/.zshrc` or `~/.bash_profile`, which ever one you edited.
 
 ## Supported File Formats
 
