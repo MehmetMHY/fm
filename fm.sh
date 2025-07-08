@@ -40,7 +40,7 @@ usage() {
 	echo
 	echo "Options:"
 	echo "  -l, --languages LANGS   Specify comma-separated languages to format (e.g., 'python,bash')."
-	echo "                          Available: bash, python, javascript, clang. Default: all."
+	echo "                          Available: bash, python, javascript, clang, go. Default: all."
 	echo "  -I, --ignore PATTERN    Ignore files or directories matching PATTERN (glob)."
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
@@ -441,6 +441,77 @@ format_clang() {
 	fi
 }
 
+format_go() {
+	local path="$1"
+	if ! command -v gofmt &>/dev/null; then
+		echo -e "${RED}Error: gofmt is not installed. Please install Go and try again.${NC}"
+		return 1
+	fi
+
+	# function to format a single file
+	format_go_file() {
+		local file="$1"
+		if is_ignored_by_git "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (git):${NC} $file"
+			return
+		fi
+		if is_user_ignored "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
+			return
+		fi
+
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! gofmt "$file" | diff -q "$file" - >/dev/null; then
+				echo -e "${YELLOW}Changes detected in:${NC} $file"
+				gofmt "$file" | diff -u "$file" -
+			fi
+			return
+		fi
+
+		if gofmt -w "$file"; then
+			echo -e "${GREEN}Formatted:${NC} $file"
+		else
+			echo -e "${RED}Error formatting:${NC} $file"
+		fi
+	}
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting Go files in directory:${NC} $path"
+		local -a prune_args
+		read -r -a prune_args <<<"$(build_prune_args "$path")"
+
+		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.go" -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_go_file "$file"; done
+		else
+			export -f format_go_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "{}"'
+		fi
+	elif [[ -f "$path" && "$path" == *.go ]]; then
+		echo -e "${BLUE}Formatting Go file:${NC} $path"
+		format_go_file "$path"
+	else
+		echo -e "${RED}Error: Path '$path' is not a Go file or directory.${NC}"
+		return 1
+	fi
+}
+
 has_bash_files() {
 	local path="$1"
 	if [[ -d "$path" ]]; then
@@ -488,6 +559,17 @@ has_clang_files() {
 		[[ -n $(find "$path" -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print -quit) ]]
 	elif [[ -f "$path" ]]; then
 		[[ "$path" == *.c || "$path" == *.cpp || "$path" == *.h || "$path" == *.hpp || "$path" == *.m || "$path" == *.mm || "$path" == *.java ]]
+	else
+		return 1
+	fi
+}
+
+has_go_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f -name "*.go" -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.go ]]
 	else
 		return 1
 	fi
@@ -653,6 +735,12 @@ main() {
 			format_clang "$resolved_path"
 			echo
 		fi
+
+		if should_run "go" && has_go_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting Go files${NC}"
+			format_go "$resolved_path"
+			echo
+		fi
 	elif [[ -f "$resolved_path" ]]; then
 		# format a single file based on its extension
 		case "$resolved_path" in
@@ -670,6 +758,14 @@ main() {
 				format_python "$resolved_path"
 			else
 				echo -e "${YELLOW}Skipping: 'python' not in the languages to format.${NC}"
+			fi
+			;;
+		*.go)
+			if should_run "go"; then
+				echo -e "${GREEN}Formatting Go file${NC}"
+				format_go "$resolved_path"
+			else
+				echo -e "${YELLOW}Skipping: 'go' not in the languages to format.${NC}"
 			fi
 			;;
 		*)

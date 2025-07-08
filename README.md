@@ -12,6 +12,7 @@
 - `black`
 - `prettier`
 - `clang-format`
+- `gofmt` (included with Go)
 
 The `setup.sh` script will attempt to install these for you using `brew`, `pip`, and `npm`.
 
@@ -62,6 +63,7 @@ Finally, make sure to source your `~/.zshrc` or `~/.bash_profile`, which ever on
 .m
 .mm
 .java
+.go
 ```
 
 ## Installation
@@ -127,7 +129,7 @@ fm
 
 You can specify which languages to format using the `-l` or `--languages` flag. Provide a comma-separated list of languages.
 
-Available languages: `bash`, `python`, `javascript`, `clang`.
+Available languages: `bash`, `python`, `javascript`, `clang`, `go`.
 
 ```bash
 # format only Python and Bash files in the current directory
@@ -218,6 +220,14 @@ The ClangFormat formatter is used to format C, C++, Obj-C, Java, JavaScript, and
 
 ```bash
 brew install clang-format
+```
+
+#### [gofmt](https://golang.org/cmd/gofmt/)
+
+The gofmt formatter is the standard Go code formatter. In fm, it's used to format **go** files. gofmt is included with any Go installation. To install Go, visit the [official Go website](https://golang.org/dl/) or install it using [HomeBrew](https://brew.sh/):
+
+```bash
+brew install go
 ```
 
 ## Testing and Benchmarking
