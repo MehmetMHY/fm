@@ -14,11 +14,11 @@
 - `clang-format`
 - `gofmt` (included with Go)
 
-The `setup.sh` script will attempt to install these for you using `brew`, `pip`, and `npm`.
+The `install.sh` script will attempt to install these for you using `brew`, `pip`, and `npm`.
 
 ### macOS Users
 
-On macOS, this script requires GNU `getopt`. The setup script will install it for you using Homebrew. You will then need to add it to your `PATH`. The `fm` script will guide you if your `PATH` is not correctly configured.
+On macOS, this script requires GNU `getopt`. The install script will install it for you using Homebrew. You will then need to add it to your `PATH`. The `fm` script will guide you if your `PATH` is not correctly configured.
 
 To do this, first install `getopt` with Homebrew with this command:
 
@@ -75,24 +75,24 @@ Finally, make sure to source your `~/.zshrc` or `~/.bash_profile`, which ever on
    cd fm
    ```
 
-2. Run the main setup script to install and/or update **fm**:
+2. Run the install script to install and/or update **fm**:
 
    ```bash
    # run this command
-   bash setup.sh -i
+   bash install.sh
 
    # (optional) if the command above fails, run this command:
-   sudo bash setup.sh -i
+   sudo bash install.sh
    ```
 
-3. (optional) Uninstall **fm**, if you desire, by running the main script with the following parameter:
+3. (optional) Uninstall **fm**, if you desire, by running the uninstall script:
 
    ```bash
    # run this command
-   bash setup.sh -r
+   bash uninstall.sh
 
    # (optional) if the command above fails, run this command:
-   sudo bash setup.sh -r
+   sudo bash uninstall.sh
    ```
 
 ## Usage

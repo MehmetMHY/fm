@@ -72,6 +72,31 @@ is_ignored_by_git() {
 	fi
 }
 
+# Get all ignored patterns from .gitignore and user arguments
+get_all_ignore_patterns() {
+	local -a patterns=()
+	# Add user-provided patterns first
+	for p in "${ignore_patterns[@]}"; do
+		patterns+=("$p")
+	done
+
+	# Add patterns from .gitignore
+	if $USE_GITIGNORE && in_git_repo; then
+		while IFS= read -r line; do
+			# Add to array, removing trailing slash if it exists
+			patterns+=("${line%/}")
+		done < <(git ls-files --others --ignored --exclude-standard --directory)
+	fi
+
+	# Always ignore node_modules
+	if ! [[ " ${patterns[*]} " =~ " node_modules " ]]; then
+		patterns+=("node_modules")
+	fi
+
+	# Return a space-separated list of patterns
+	echo "${patterns[@]}"
+}
+
 is_user_ignored() {
 	local file="$1"
 	local rel_file
@@ -93,24 +118,21 @@ is_user_ignored() {
 # builds find arguments to prune ignored directories
 build_prune_args() {
 	local path="$1"
+	local -a patterns_to_ignore
+	read -r -a patterns_to_ignore <<<"$(get_all_ignore_patterns)"
+
 	local -a prune_args=()
-
-	# also prune node_modules by default
-	local -a all_patterns=("node_modules")
-	for p in "${ignore_patterns[@]}"; do
-		all_patterns+=("$p")
-	done
-
-	if [ ${#all_patterns[@]} -gt 0 ]; then
+	if [ ${#patterns_to_ignore[@]} -gt 0 ]; then
 		local -a prune_paths=()
-		for pattern in "${all_patterns[@]}"; do
+		for pattern in "${patterns_to_ignore[@]}"; do
 			if [ ${#prune_paths[@]} -gt 0 ]; then
 				prune_paths+=(-o)
 			fi
-			if [[ "$pattern" == "node_modules" ]]; then
-				prune_paths+=(-name "node_modules")
-			else
+			# Use -name for simple names and -path for paths with wildcards
+			if [[ "$pattern" == *"/"* ]]; then
 				prune_paths+=(-path "$path/$pattern")
+			else
+				prune_paths+=(-name "$pattern")
 			fi
 		done
 		prune_args+=(\()
