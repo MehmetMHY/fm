@@ -1,6 +1,4 @@
-<p align="center">
-    <img width="250" src="./logo.png">
-</p>
+# FM
 
 ## Overview
 
