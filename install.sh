@@ -26,9 +26,13 @@ if command -v brew &>/dev/null; then
 		echo "pip not found, installing python via Homebrew..."
 		brew install python
 	fi
+	if ! command -v black &>/dev/null; then
+		echo "black not found, installing via pip..."
+		pip install black
+	fi
 elif command -v apt &>/dev/null; then
 	echo "Detected APT..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v pip &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v black &>/dev/null; then
 		echo "Updating package list..."
 		sudo apt update
 	fi
@@ -44,13 +48,13 @@ elif command -v apt &>/dev/null; then
 		echo "npm not found, installing Node.js and npm via APT..."
 		sudo apt install -y nodejs npm
 	fi
-	if ! command -v pip &>/dev/null; then
-		echo "pip not found, installing python3-pip via APT..."
-		sudo apt install -y python3-pip
+	if ! command -v black &>/dev/null; then
+		echo "black not found, installing via APT..."
+		sudo apt install -y python3-black
 	fi
 elif command -v pacman &>/dev/null; then
 	echo "Detected Pacman..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v pip &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v black &>/dev/null; then
 		echo "Synchronizing package databases..."
 		sudo pacman -Sy --noconfirm
 	fi
@@ -66,18 +70,13 @@ elif command -v pacman &>/dev/null; then
 		echo "npm not found, installing Node.js and npm via Pacman..."
 		sudo pacman -S --noconfirm nodejs npm
 	fi
-	if ! command -v pip &>/dev/null; then
-		echo "pip not found, installing python-pip via Pacman..."
-		sudo pacman -S --noconfirm python-pip
+	if ! command -v black &>/dev/null; then
+		echo "black not found, installing via Pacman..."
+		sudo pacman -S --noconfirm python-black
 	fi
 else
 	echo "Warning: No supported package manager (brew, apt, pacman) detected."
-	echo "Please ensure shfmt, clang-format, gnu-getopt (on macOS), npm, and pip are installed manually."
-fi
-
-if ! command -v black &>/dev/null; then
-	echo "black not found, installing via pip..."
-	pip install black
+	echo "Please ensure all dependencies (shfmt, clang-format, gnu-getopt, npm, black) are installed manually."
 fi
 
 if ! command -v prettier &>/dev/null; then
