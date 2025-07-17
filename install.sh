@@ -22,9 +22,13 @@ if command -v brew &>/dev/null; then
 		echo "npm not found, installing Node.js via Homebrew..."
 		brew install node
 	fi
+	if ! command -v pip &>/dev/null; then
+		echo "pip not found, installing python via Homebrew..."
+		brew install python
+	fi
 elif command -v apt &>/dev/null; then
 	echo "Detected APT..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v pip &>/dev/null; then
 		echo "Updating package list..."
 		sudo apt update
 	fi
@@ -40,9 +44,13 @@ elif command -v apt &>/dev/null; then
 		echo "npm not found, installing Node.js and npm via APT..."
 		sudo apt install -y nodejs npm
 	fi
+	if ! command -v pip &>/dev/null; then
+		echo "pip not found, installing python3-pip via APT..."
+		sudo apt install -y python3-pip
+	fi
 elif command -v pacman &>/dev/null; then
 	echo "Detected Pacman..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v pip &>/dev/null; then
 		echo "Synchronizing package databases..."
 		sudo pacman -Sy --noconfirm
 	fi
@@ -58,14 +66,13 @@ elif command -v pacman &>/dev/null; then
 		echo "npm not found, installing Node.js and npm via Pacman..."
 		sudo pacman -S --noconfirm nodejs npm
 	fi
+	if ! command -v pip &>/dev/null; then
+		echo "pip not found, installing python-pip via Pacman..."
+		sudo pacman -S --noconfirm python-pip
+	fi
 else
 	echo "Warning: No supported package manager (brew, apt, pacman) detected."
-	echo "Please ensure shfmt, clang-format, gnu-getopt (on macOS), and npm are installed manually."
-fi
-
-if ! command -v pip &>/dev/null; then
-	echo "Error: pip is not installed. Learn to install it from https://packaging.python.org/en/latest/tutorials/installing-packages/"
-	exit 1
+	echo "Please ensure shfmt, clang-format, gnu-getopt (on macOS), npm, and pip are installed manually."
 fi
 
 if ! command -v black &>/dev/null; then
