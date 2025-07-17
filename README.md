@@ -190,10 +190,17 @@ fm --no-gitignore .
 
 #### [shfmt](https://github.com/mvdan/sh)
 
-The shfmt formatter is used to format shell scripts. In fm, it's used to format **.sh**, **.bash**, **.dash**, and **.ksh** files. To install shfmt, check out their [GitHub Repo](https://github.com/mvdan/sh) or install it using [HomeBrew](https://brew.sh/):
+The shfmt formatter is used to format shell scripts. In fm, it's used to format **.sh**, **.bash**, **.dash**, and **.ksh** files. To install shfmt, check out their [GitHub Repo](https://github.com/mvdan/sh). It can be installed with package managers like Homebrew, APT, or Pacman:
 
 ```bash
+# Homebrew (macOS)
 brew install shfmt
+
+# APT (Debian/Ubuntu)
+sudo apt install shfmt
+
+# Pacman (Arch Linux)
+sudo pacman -S shfmt
 ```
 
 #### [black](https://github.com/psf/black)
@@ -214,10 +221,17 @@ npm i -g prettier
 
 #### [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
 
-The ClangFormat formatter is used to format C, C++, Obj-C, Java, JavaScript, and TypeScript scripts. In fm, it's used to format **c**, **cpp**, **h**, **hpp**, **m**, **mm**, and **java** files. To install it, you can check out their [docs](https://clang.llvm.org/docs/ClangFormat.html) or install it using [HomeBrew](https://brew.sh/):
+The ClangFormat formatter is used to format C, C++, Obj-C, Java, JavaScript, and TypeScript scripts. In fm, it's used to format **c**, **cpp**, **h**, **hpp**, **m**, **mm**, and **java** files. To install it, you can check out their [docs](https://clang.llvm.org/docs/ClangFormat.html). It can be installed with package managers like Homebrew, APT, or Pacman:
 
 ```bash
+# Homebrew (macOS)
 brew install clang-format
+
+# APT (Debian/Ubuntu)
+sudo apt install clang-format
+
+# Pacman (Arch Linux)
+sudo pacman -S clang-format
 ```
 
 #### [gofmt](https://golang.org/cmd/gofmt/)
