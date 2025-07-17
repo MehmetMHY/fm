@@ -18,9 +18,13 @@ if command -v brew &>/dev/null; then
 		echo "clang-format not found, installing via Homebrew..."
 		brew install clang-format
 	fi
+	if ! command -v npm &>/dev/null; then
+		echo "npm not found, installing Node.js via Homebrew..."
+		brew install node
+	fi
 elif command -v apt &>/dev/null; then
 	echo "Detected APT..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null; then
 		echo "Updating package list..."
 		sudo apt update
 	fi
@@ -32,9 +36,13 @@ elif command -v apt &>/dev/null; then
 		echo "clang-format not found, installing via APT..."
 		sudo apt install -y clang-format
 	fi
+	if ! command -v npm &>/dev/null; then
+		echo "npm not found, installing Node.js and npm via APT..."
+		sudo apt install -y nodejs npm
+	fi
 elif command -v pacman &>/dev/null; then
 	echo "Detected Pacman..."
-	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null; then
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null; then
 		echo "Synchronizing package databases..."
 		sudo pacman -Sy --noconfirm
 	fi
@@ -46,18 +54,17 @@ elif command -v pacman &>/dev/null; then
 		echo "clang-format not found, installing via Pacman..."
 		sudo pacman -S --noconfirm clang-format
 	fi
+	if ! command -v npm &>/dev/null; then
+		echo "npm not found, installing Node.js and npm via Pacman..."
+		sudo pacman -S --noconfirm nodejs npm
+	fi
 else
 	echo "Warning: No supported package manager (brew, apt, pacman) detected."
-	echo "Please ensure shfmt, clang-format, and gnu-getopt (on macOS) are installed manually."
+	echo "Please ensure shfmt, clang-format, gnu-getopt (on macOS), and npm are installed manually."
 fi
 
 if ! command -v pip &>/dev/null; then
 	echo "Error: pip is not installed. Learn to install it from https://packaging.python.org/en/latest/tutorials/installing-packages/"
-	exit 1
-fi
-
-if ! command -v npm &>/dev/null; then
-	echo "Error: npm is not installed. Install it from https://nodejs.org/en/download"
 	exit 1
 fi
 
