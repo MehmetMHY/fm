@@ -12,7 +12,7 @@
 - `clang-format`
 - `gofmt` (included with Go)
 
-The `install.sh` script will attempt to install these for you using `brew`, `pip`, and `npm`.
+The `install.sh` script will attempt to install these for you using `brew`, `apt`, `pkg` (Termux), `pacman`, `pip`, and `npm`.
 
 ### macOS Users
 
@@ -31,6 +31,10 @@ export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"
 ```
 
 Finally, make sure to source your `~/.zshrc` or `~/.bash_profile`, which ever one you edited.
+
+### Android/Termux Users
+
+The install script automatically detects Termux environments and uses the `pkg` package manager instead of `apt`. No additional configuration is needed.
 
 ## Supported File Formats
 
@@ -199,6 +203,9 @@ brew install shfmt
 # APT (Debian/Ubuntu)
 sudo apt install shfmt
 
+# pkg (Termux/Android)
+pkg install shfmt
+
 # Pacman (Arch Linux)
 sudo pacman -S shfmt
 ```
@@ -229,6 +236,9 @@ brew install clang-format
 
 # APT (Debian/Ubuntu)
 sudo apt install clang-format
+
+# pkg (Termux/Android)
+pkg install clang
 
 # Pacman (Arch Linux)
 sudo pacman -S clang-format

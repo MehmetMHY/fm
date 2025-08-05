@@ -1,8 +1,35 @@
 #!/usr/bin/env bash
 
-INSTALL_DIR="/usr/local/bin"
+# Set install directory based on environment
+if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
+	INSTALL_DIR="$PREFIX/bin" # Termux uses $PREFIX/bin
+else
+	INSTALL_DIR="/usr/local/bin"
+fi
 
-if command -v brew &>/dev/null; then
+if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
+	echo "Detected Termux pkg..."
+	if ! command -v shfmt &>/dev/null || ! command -v clang-format &>/dev/null || ! command -v npm &>/dev/null || ! command -v pip &>/dev/null; then
+		echo "Updating package list..."
+		pkg update
+	fi
+	if ! command -v shfmt &>/dev/null; then
+		echo "shfmt not found, installing via pkg..."
+		pkg install -y shfmt
+	fi
+	if ! command -v clang-format &>/dev/null; then
+		echo "clang-format not found, installing via pkg..."
+		pkg install -y clang
+	fi
+	if ! command -v npm &>/dev/null; then
+		echo "npm not found, installing Node.js and npm via pkg..."
+		pkg install -y nodejs
+	fi
+	if ! command -v pip &>/dev/null; then
+		echo "pip not found, installing python via pkg..."
+		pkg install -y python
+	fi
+elif command -v brew &>/dev/null; then
 	echo "Detected Homebrew (brew)..."
 	if [[ "$(uname)" == "Darwin" ]]; then
 		if ! brew --prefix gnu-getopt >/dev/null 2>&1; then
@@ -71,7 +98,7 @@ elif command -v pacman &>/dev/null; then
 		sudo pacman -S --noconfirm python-black
 	fi
 else
-	echo "Warning: No supported package manager (brew, apt, pacman) detected."
+	echo "Warning: No supported package manager (brew, apt, pkg, pacman) detected."
 	echo "Please ensure all dependencies are installed manually."
 fi
 
