@@ -12,29 +12,21 @@
 - `clang-format`
 - `gofmt` (included with Go)
 
-The `install.sh` script will attempt to install these for you using `brew`, `apt`, `pkg` (Termux), `pacman`, `pip`, and `npm`.
+The `install.sh` script will attempt to install these for you using your system's package manager.
 
-### macOS Users
+## Supported Operating Systems
 
-On macOS, this script requires GNU `getopt`. The install script will install it for you using Homebrew. You will then need to add it to your `PATH`. The `fm` script will guide you if your `PATH` is not correctly configured.
+- macOS (Homebrew)
+- Debian/Ubuntu (APT)
+- RHEL/CentOS (YUM)
+- Fedora (DNF)
+- openSUSE (Zypper)
+- Arch Linux (Pacman)
+- Gentoo (Portage)
+- Void Linux (XBPS)
+- Android/Termux (pkg)
 
-To do this, first install `getopt` with Homebrew with this command:
-
-```bash
-brew install gnu-getopt
-```
-
-Then, add the following line to your `~/.zshrc` or `~/.bash_profile`:
-
-```bash
-export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"
-```
-
-Finally, make sure to source your `~/.zshrc` or `~/.bash_profile`, which ever one you edited.
-
-### Android/Termux Users
-
-The install script automatically detects Termux environments and uses the `pkg` package manager instead of `apt`. No additional configuration is needed.
+**Note for macOS:** GNU `getopt` is required and will be installed automatically. Add `export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"` to your shell profile if needed.
 
 ## Supported File Formats
 
@@ -70,32 +62,11 @@ The install script automatically detects Termux environments and uses the `pkg` 
 
 ## Installation
 
-1. Clone the repository and go into it:
+1. Clone the repository and go into it: `git clone https://github.com/MehmetMHY/fm.git ; cd fm`
 
-   ```bash
-   git clone https://github.com/MehmetMHY/fm.git
-   cd fm
-   ```
+2. Run the install script to install and/or update **fm**: `bash install.sh`
 
-2. Run the install script to install and/or update **fm**:
-
-   ```bash
-   # run this command
-   bash install.sh
-
-   # (optional) if the command above fails, run this command:
-   sudo bash install.sh
-   ```
-
-3. (optional) Uninstall **fm**, if you desire, by running the uninstall script:
-
-   ```bash
-   # run this command
-   bash uninstall.sh
-
-   # (optional) if the command above fails, run this command:
-   sudo bash uninstall.sh
-   ```
+3. (optional) Uninstall **fm**, if you desire, by running the uninstall script: `bash uninstall.sh`
 
 ## Usage
 
@@ -187,80 +158,3 @@ To format files that are listed in your `.gitignore` file, use the `--no-gitigno
 # format all files, including those in .gitignore
 fm --no-gitignore .
 ```
-
-## Additional Information
-
-### Formatters (Deep Dive)
-
-#### [shfmt](https://github.com/mvdan/sh)
-
-The shfmt formatter is used to format shell scripts. In fm, it's used to format **.sh**, **.bash**, **.dash**, and **.ksh** files. To install shfmt, check out their [GitHub Repo](https://github.com/mvdan/sh). It can be installed with package managers like Homebrew, APT, or Pacman:
-
-```bash
-# Homebrew (macOS)
-brew install shfmt
-
-# APT (Debian/Ubuntu)
-sudo apt install shfmt
-
-# pkg (Termux/Android)
-pkg install shfmt
-
-# Pacman (Arch Linux)
-sudo pacman -S shfmt
-```
-
-#### [black](https://github.com/psf/black)
-
-The black formatter is used to format python scripts. In fm, it's only used to format **.py** files. To install it, you need [Python & Pip](https://www.python.org/) then you can install it using pip:
-
-```bash
-pip install black
-```
-
-#### [Prettier](https://www.npmjs.com/package/prettier)
-
-The Prettier formatter is used to format "JavaScript Based Projects". In fm, it's used to format **js**, **jsx**, **ts**, **tsx**, **json**, **md**, **html**, **css**, **yml**, **yaml**, **graphql**, **vue**, **scss**, and **less** files. To install it, you need [NodeJS](https://nodejs.org/en) then you can install it using npm:
-
-```bash
-npm i -g prettier
-```
-
-#### [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
-
-The ClangFormat formatter is used to format C, C++, Obj-C, Java, JavaScript, and TypeScript scripts. In fm, it's used to format **c**, **cpp**, **h**, **hpp**, **m**, **mm**, and **java** files. To install it, you can check out their [docs](https://clang.llvm.org/docs/ClangFormat.html). It can be installed with package managers like Homebrew, APT, or Pacman:
-
-```bash
-# Homebrew (macOS)
-brew install clang-format
-
-# APT (Debian/Ubuntu)
-sudo apt install clang-format
-
-# pkg (Termux/Android)
-pkg install clang
-
-# Pacman (Arch Linux)
-sudo pacman -S clang-format
-```
-
-#### [gofmt](https://golang.org/cmd/gofmt/)
-
-The gofmt formatter is the standard Go code formatter. In fm, it's used to format **go** files. gofmt is included with any Go installation. To install Go, visit the [official Go website](https://golang.org/dl/) or install it using [HomeBrew](https://brew.sh/):
-
-```bash
-brew install go
-```
-
-## Testing and Benchmarking
-
-For testing, debugging, or benchmarking `fm`, a helper script is provided at `assets/clone.sh`. This script clones a number of popular, open-source repositories into a `tests/` directory at the project root. These repositories contain a wide variety of languages and file structures, making them an ideal test bed. The cloned repositories are not tracked by Git.
-
-To download the test repositories, you must first `cd` into the `assets` directory before running the script:
-
-```bash
-cd assets/
-bash clone.sh
-```
-
-This will create a `tests/` directory in the project's root, populated with the test repositories. You can then run `fm` on this directory to test its performance and accuracy.
