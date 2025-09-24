@@ -40,7 +40,7 @@ usage() {
 	echo
 	echo "Options:"
 	echo "  -l, --languages LANGS   Specify comma-separated languages to format (e.g., 'python,bash')."
-	echo "                          Available: bash, python, javascript, clang, go. Default: all."
+	echo "                          Available: bash, python, javascript, clang, go, rust. Default: all."
 	echo "  -I, --ignore PATTERN    Ignore files or directories matching PATTERN (glob)."
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
@@ -534,6 +534,126 @@ format_go() {
 	fi
 }
 
+format_rust() {
+	local path="$1"
+	if ! command -v rustfmt &>/dev/null; then
+		echo -e "${RED}Error: rustfmt is not installed. Please install it with 'rustup component add rustfmt' and try again.${NC}"
+		return 1
+	fi
+
+	find_cargo_project_root() {
+		local dir="$1"
+		while [ -n "$dir" ] && [ "$dir" != "/" ]; do
+			if [ -f "$dir/Cargo.toml" ]; then
+				echo "$dir"
+				return 0
+			fi
+			dir=$(dirname "$dir")
+		done
+		return 1
+	}
+
+	# function to format a single file
+	format_rust_file() {
+		local file="$1"
+		if is_ignored_by_git "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (git):${NC} $file"
+			return
+		fi
+		if is_user_ignored "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
+			return
+		fi
+
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! rustfmt --check "$file"; then
+				echo -e "${YELLOW}Would reformat:${NC} $file"
+			fi
+			return
+		fi
+
+		if rustfmt "$file"; then
+			echo -e "${GREEN}Formatted:${NC} $file"
+		else
+			echo -e "${RED}Error formatting:${NC} $file"
+		fi
+	}
+
+	if [[ -d "$path" ]]; then
+		local cargo_root
+		cargo_root=$(find_cargo_project_root "$path")
+
+		if [ -n "$cargo_root" ]; then
+			echo -e "${BLUE}Formatting Rust project:${NC} $cargo_root"
+			if ! command -v cargo &>/dev/null; then
+				echo -e "${RED}Error: cargo is not installed. Please install Rust and try again.${NC}"
+				return 1
+			fi
+			(
+				cd "$cargo_root" || return
+				if $DRY_RUN; then
+					if ! cargo fmt -- --check; then
+						echo -e "${YELLOW}Would reformat files in project:${NC} $cargo_root"
+					fi
+					return
+				fi
+
+				if $INTERACTIVE; then
+					read -p "Format entire Rust project in $cargo_root? [y]es, [N]o, [q]uit: " choice
+					case "$choice" in
+					y | Y) ;;
+					q | Q) exit 0 ;;
+					*)
+						echo "Skipping project."
+						return
+						;;
+					esac
+				fi
+
+				if cargo fmt; then
+					echo -e "${GREEN}Formatted project:${NC} $cargo_root"
+				else
+					echo -e "${RED}Error formatting project:${NC} $cargo_root"
+				fi
+			)
+		else
+			echo -e "${BLUE}Formatting Rust files in directory:${NC} $path"
+			local -a prune_args
+			read -r -a prune_args <<<"$(build_prune_args "$path")"
+
+			local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.rs" -print0)
+
+			if $INTERACTIVE; then
+				"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_rust_file "$file"; done
+			else
+				export -f format_rust_file is_ignored_by_git is_user_ignored in_git_repo
+				export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
+				export ignore_patterns
+				"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "{}"'
+			fi
+		fi
+	elif [[ -f "$path" && "$path" == *.rs ]]; then
+		echo -e "${BLUE}Formatting Rust file:${NC} $path"
+		format_rust_file "$path"
+	else
+		echo -e "${RED}Error: Path '$path' is not a Rust file or directory.${NC}"
+		return 1
+	fi
+}
+
 has_bash_files() {
 	local path="$1"
 	if [[ -d "$path" ]]; then
@@ -592,6 +712,17 @@ has_go_files() {
 		[[ -n $(find "$path" -type f -name "*.go" -print -quit) ]]
 	elif [[ -f "$path" ]]; then
 		[[ "$path" == *.go ]]
+	else
+		return 1
+	fi
+}
+
+has_rust_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f -name "*.rs" -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.rs ]]
 	else
 		return 1
 	fi
@@ -763,6 +894,12 @@ main() {
 			format_go "$resolved_path"
 			echo
 		fi
+
+		if should_run "rust" && has_rust_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting Rust files${NC}"
+			format_rust "$resolved_path"
+			echo
+		fi
 	elif [[ -f "$resolved_path" ]]; then
 		# format a single file based on its extension
 		case "$resolved_path" in
@@ -788,6 +925,14 @@ main() {
 				format_go "$resolved_path"
 			else
 				echo -e "${YELLOW}Skipping: 'go' not in the languages to format.${NC}"
+			fi
+			;;
+		*.rs)
+			if should_run "rust"; then
+				echo -e "${GREEN}Formatting Rust file${NC}"
+				format_rust "$resolved_path"
+			else
+				echo -e "${YELLOW}Skipping: 'rust' not in the languages to format.${NC}"
 			fi
 			;;
 		*)

@@ -11,6 +11,7 @@
 - `prettier`
 - `clang-format`
 - `gofmt` (included with Go)
+- `rustfmt` (installed with rustup)
 
 The `install.sh` script will attempt to install these for you using your system's package manager.
 
@@ -58,6 +59,7 @@ The `install.sh` script will attempt to install these for you using your system'
 .mm
 .java
 .go
+.rs
 ```
 
 ## Installation

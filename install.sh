@@ -188,6 +188,17 @@ else
 	echo "Please ensure all dependencies are installed manually."
 fi
 
+# Check for Rust and rustfmt
+if ! command -v rustfmt &>/dev/null; then
+	echo "rustfmt not found."
+	if command -v rustup &>/dev/null; then
+		echo "Found rustup, attempting to install rustfmt component..."
+		rustup component add rustfmt
+	else
+		echo "Warning: rustup not found. To format Rust code, please install Rust and rustup from https://rustup.rs/"
+	fi
+fi
+
 if ! command -v black &>/dev/null; then
 	echo "black not found, installing via pip..."
 	pip install --break-system-packages black
