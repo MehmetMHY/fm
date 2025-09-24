@@ -6,13 +6,13 @@
 
 ## Requirements
 
-- `shfmt`
-- `black`
-- `prettier`
-- `clang-format`
-- `gofmt` (included with Go)
-- `rustfmt` (installed with rustup)
-- `swift-format`
+- [shfmt](https://github.com/mvdan/sh)
+- [black](https://github.com/psf/black)
+- [prettier](https://github.com/prettier/prettier)
+- [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+- [gofmt](https://pkg.go.dev/cmd/gofmt) (included with Go)
+- [rustfmt](https://github.com/rust-lang/rustfmt) (installed with rustup)
+- [swift-format](https://github.com/swiftlang/swift-format)
 
 The `install.sh` script will attempt to install these for you using your system's package manager.
 
@@ -44,8 +44,6 @@ The `install.sh` script will attempt to install these for you using your system'
 .tsx
 .json
 .md
-.html
-.css
 .yml
 .yaml
 .graphql
@@ -63,6 +61,16 @@ The `install.sh` script will attempt to install these for you using your system'
 .rs
 .swift
 ```
+
+## Future Formatters
+
+There is consideration for supporting additional languages based on community demand. The formatters that are being heavily considered right now are the following:
+
+- Ruby: [rubocop](https://github.com/rubocop/rubocop)
+- PHP: [PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer)
+- C#: [Csharpier](https://github.com/belav/csharpier)
+
+Support for formatting **HTML** and **CSS** scripts was heavily considered, but no suitable solution exists that meets the project's standards. So, sadly, support for **HTML** and **CSS** will not happen any time soon or in the near and far future.
 
 ## Installation
 

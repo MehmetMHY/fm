@@ -16,3 +16,7 @@ env/
 .sandbox/
 .lab/
 assets/tests/*
+target/
+.build/
+[Bb]in/
+[Oo]bj/
