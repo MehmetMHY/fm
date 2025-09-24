@@ -12,6 +12,7 @@
 - `clang-format`
 - `gofmt` (included with Go)
 - `rustfmt` (installed with rustup)
+- `swift-format`
 
 The `install.sh` script will attempt to install these for you using your system's package manager.
 
@@ -60,6 +61,7 @@ The `install.sh` script will attempt to install these for you using your system'
 .java
 .go
 .rs
+.swift
 ```
 
 ## Installation
@@ -104,7 +106,7 @@ fm
 
 You can specify which languages to format using the `-l` or `--languages` flag. Provide a comma-separated list of languages.
 
-Available languages: `bash`, `python`, `javascript`, `clang`, `go`.
+Available languages: `bash`, `python`, `javascript`, `clang`, `go`, `rust`, `swift`.
 
 ```bash
 # format only Python and Bash files in the current directory

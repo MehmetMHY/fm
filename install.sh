@@ -199,6 +199,17 @@ if ! command -v rustfmt &>/dev/null; then
 	fi
 fi
 
+# Check for swift-format
+if ! command -v swift-format &>/dev/null; then
+	echo "swift-format not found."
+	if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
+		echo "Attempting to install swift-format via Homebrew..."
+		brew install swift-format
+	else
+		echo "Warning: swift-format is not installed. Please install it manually to format Swift code."
+	fi
+fi
+
 if ! command -v black &>/dev/null; then
 	echo "black not found, installing via pip..."
 	pip install --break-system-packages black

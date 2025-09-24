@@ -40,7 +40,7 @@ usage() {
 	echo
 	echo "Options:"
 	echo "  -l, --languages LANGS   Specify comma-separated languages to format (e.g., 'python,bash')."
-	echo "                          Available: bash, python, javascript, clang, go, rust. Default: all."
+	echo "                          Available: bash, python, javascript, clang, go, rust, swift. Default: all."
 	echo "  -I, --ignore PATTERN    Ignore files or directories matching PATTERN (glob)."
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
@@ -654,6 +654,77 @@ format_rust() {
 	fi
 }
 
+format_swift() {
+	local path="$1"
+	if ! command -v swift-format &>/dev/null; then
+		echo -e "${RED}Error: swift-format is not installed. Please install it and try again.${NC}"
+		echo -e "${YELLOW}On macOS, you can use 'brew install swift-format'. For other systems, please see the official installation instructions.${NC}"
+		return 1
+	fi
+
+	# function to format a single file
+	format_swift_file() {
+		local file="$1"
+		if is_ignored_by_git "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (git):${NC} $file"
+			return
+		fi
+		if is_user_ignored "$file"; then
+			echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
+			return
+		fi
+
+		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
+			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
+			case "$choice" in
+			y | Y) ;;
+			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
+			q | Q) exit 0 ;;
+			*)
+				echo "Skipping."
+				return
+				;;
+			esac
+		fi
+
+		if $DRY_RUN; then
+			if ! swift-format lint --strict "$file" >/dev/null 2>&1; then
+				echo -e "${YELLOW}Would reformat:${NC} $file"
+			fi
+			return
+		fi
+
+		if swift-format --in-place "$file"; then
+			echo -e "${GREEN}Formatted:${NC} $file"
+		else
+			echo -e "${RED}Error formatting:${NC} $file"
+		fi
+	}
+
+	if [[ -d "$path" ]]; then
+		echo -e "${BLUE}Formatting Swift files in directory:${NC} $path"
+		local -a prune_args
+		read -r -a prune_args <<<"$(build_prune_args "$path")"
+
+		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.swift" -print0)
+
+		if $INTERACTIVE; then
+			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_swift_file "$file"; done
+		else
+			export -f format_swift_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "{}"'
+		fi
+	elif [[ -f "$path" && "$path" == *.swift ]]; then
+		echo -e "${BLUE}Formatting Swift file:${NC} $path"
+		format_swift_file "$path"
+	else
+		echo -e "${RED}Error: Path '$path' is not a Swift file or directory.${NC}"
+		return 1
+	fi
+}
+
 has_bash_files() {
 	local path="$1"
 	if [[ -d "$path" ]]; then
@@ -723,6 +794,17 @@ has_rust_files() {
 		[[ -n $(find "$path" -type f -name "*.rs" -print -quit) ]]
 	elif [[ -f "$path" ]]; then
 		[[ "$path" == *.rs ]]
+	else
+		return 1
+	fi
+}
+
+has_swift_files() {
+	local path="$1"
+	if [[ -d "$path" ]]; then
+		[[ -n $(find "$path" -type f -name "*.swift" -print -quit) ]]
+	elif [[ -f "$path" ]]; then
+		[[ "$path" == *.swift ]]
 	else
 		return 1
 	fi
@@ -900,6 +982,12 @@ main() {
 			format_rust "$resolved_path"
 			echo
 		fi
+
+		if should_run "swift" && has_swift_files "$resolved_path"; then
+			echo -e "${GREEN}Formatting Swift files${NC}"
+			format_swift "$resolved_path"
+			echo
+		fi
 	elif [[ -f "$resolved_path" ]]; then
 		# format a single file based on its extension
 		case "$resolved_path" in
@@ -933,6 +1021,14 @@ main() {
 				format_rust "$resolved_path"
 			else
 				echo -e "${YELLOW}Skipping: 'rust' not in the languages to format.${NC}"
+			fi
+			;;
+		*.swift)
+			if should_run "swift"; then
+				echo -e "${GREEN}Formatting Swift file${NC}"
+				format_swift "$resolved_path"
+			else
+				echo -e "${YELLOW}Skipping: 'swift' not in the languages to format.${NC}"
 			fi
 			;;
 		*)
