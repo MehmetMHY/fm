@@ -78,7 +78,9 @@ Support for formatting **HTML** and **CSS** scripts was heavily considered, but 
 
 2. Run the install script to install and/or update **fm**: `bash install.sh`
 
-3. (optional) Uninstall **fm**, if you desire, by running the uninstall script: `bash uninstall.sh`
+3. **(optional)** For a more controlled installation, run `bash cinstall.sh` to be prompted for each dependency.
+
+4. **(optional)** Uninstall **fm**, if you desire, by running the uninstall script: `bash uninstall.sh`
 
 ## Usage
 
