@@ -74,13 +74,31 @@ Support for formatting **HTML** and **CSS** scripts was heavily considered, but 
 
 ## Installation
 
-1. Clone the repository and go into it: `git clone https://github.com/MehmetMHY/fm.git ; cd fm`
+### Quick Install
 
-2. Run the install script to install and/or update **fm**: `bash install.sh`
+```bash
+# clone the repository and navigate into it
+git clone https://github.com/MehmetMHY/fm.git && cd fm
 
-3. **(optional)** For a more controlled installation, run `bash cinstall.sh` to be prompted for each dependency.
+# run the install script
+bash install.sh
+```
 
-4. **(optional)** Uninstall **fm**, if you desire, by running the uninstall script: `bash uninstall.sh`
+### Custom Install
+
+This is **optional**, but for a more controlled installation where you're prompted for each dependency:
+
+```bash
+bash cinstall.sh
+```
+
+### Uninstall
+
+This is **optional**, but if you want to remove **fm** from your system:
+
+```bash
+bash uninstall.sh
+```
 
 ## Usage
 
