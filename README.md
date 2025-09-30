@@ -89,7 +89,7 @@ bash install.sh
 This is **optional**, but for a more controlled installation where you're prompted for each dependency:
 
 ```bash
-bash cinstall.sh
+bash wizard.sh
 ```
 
 ### Uninstall
