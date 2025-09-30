@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Helper function to prompt for installation
 ask_to_install() {
 	read -p "Do you want to install $1 ($2)? [y/N] " choice
 	case "$choice" in
@@ -12,9 +11,9 @@ ask_to_install() {
 	esac
 }
 
-# Set install directory based on environment
 if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
-	INSTALL_DIR="$PREFIX/bin" # Termux uses $PREFIX/bin
+	# NOTE: Termux uses $PREFIX/bin/
+	INSTALL_DIR="$PREFIX/bin"
 else
 	INSTALL_DIR="/usr/local/bin"
 fi
