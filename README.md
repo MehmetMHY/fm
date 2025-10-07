@@ -10,8 +10,8 @@
 - [black](https://github.com/psf/black)
 - [prettier](https://github.com/prettier/prettier)
 - [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
-- [gofmt](https://pkg.go.dev/cmd/gofmt) (included with Go)
-- [rustfmt](https://github.com/rust-lang/rustfmt) (installed with rustup)
+- [gofmt](https://pkg.go.dev/cmd/gofmt) _(included with Go)_
+- [rustfmt](https://github.com/rust-lang/rustfmt) _(installed with Rustup)_
 - [swift-format](https://github.com/swiftlang/swift-format)
 
 The `install.sh` script will attempt to install these for you using your system's package manager.
