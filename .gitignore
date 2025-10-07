@@ -20,3 +20,8 @@ target/
 .build/
 [Bb]in/
 [Oo]bj/
+ch_*
+.ch*
+.gemini/
+.claude/
+.amazon*

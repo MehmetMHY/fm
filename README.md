@@ -190,3 +190,9 @@ To format files that are listed in your `.gitignore` file, use the `--no-gitigno
 # format all files, including those in .gitignore
 fm --no-gitignore .
 ```
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+Copyright (C) 2025 Mehmet Yilmaz
