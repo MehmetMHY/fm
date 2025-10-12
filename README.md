@@ -28,7 +28,7 @@ The `install.sh` script will attempt to install these for you using your system'
 - Void Linux (XBPS)
 - Android/Termux (pkg)
 
-**Note for macOS:** GNU `getopt` is required and will be installed automatically. Add `export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"` to your shell profile if needed.
+**NOTE:** On macOS, GNU `getopt` is required and will be installed automatically. Add `export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"` to your shell profile if needed.
 
 ## Supported File Formats
 
@@ -66,11 +66,11 @@ The `install.sh` script will attempt to install these for you using your system'
 
 There is consideration for supporting additional languages based on community demand. The formatters that are being heavily considered right now are the following:
 
-- Ruby: [rubocop](https://github.com/rubocop/rubocop)
-- PHP: [PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer)
-- C#: [Csharpier](https://github.com/belav/csharpier)
+- Ruby ([rubocop](https://github.com/rubocop/rubocop))
+- PHP ([PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer))
+- C# ([Csharpier](https://github.com/belav/csharpier))
 
-Support for formatting **HTML** and **CSS** scripts was heavily considered, but no suitable solution exists that meets the project's standards. So, sadly, support for **HTML** and **CSS** will not happen any time soon or in the near and far future.
+Support for formatting **HTML** and **CSS** files was heavily considered, but no suitable solution exists that meets the project's standards. So, sadly, support for **HTML** and **CSS** will not happen any time soon.
 
 ## Installation
 
@@ -138,7 +138,7 @@ Available languages: `bash`, `python`, `javascript`, `clang`, `go`, `rust`, `swi
 
 ```bash
 # format only Python and Bash files in the current directory
-fm -l python,bash .
+fm -l 'python,bash' .
 ```
 
 #### Ignoring Files and Directories
@@ -153,7 +153,7 @@ fm -I 'node_modules/*' -I 'dist/*' .
 fm --ignore '*.log' .
 ```
 
-#### Dry Run Mode (Check)
+#### Dry Run Mode
 
 To see which files would be changed without actually modifying them, use the `--check` or `-c` flag. This is useful for CI checks or pre-commit hooks.
 
@@ -171,7 +171,7 @@ For more control, you can use interactive mode with `--interactive` or `-i`. The
 fm -i .
 ```
 
-You will be prompted with `[y]es, [N]o, [a]ll, [q]uit`.
+You will be prompted with: `[y]es, [N]o, [a]ll, [q]uit`
 
 #### Parallel Processing
 
