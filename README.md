@@ -162,17 +162,6 @@ To see which files would be changed without actually modifying them, use the `--
 fm --check .
 ```
 
-#### Interactive Mode
-
-For more control, you can use interactive mode with `--interactive` or `-i`. The script will prompt you for each file before formatting.
-
-```bash
-# run in interactive mode
-fm -i .
-```
-
-You will be prompted with: `[y]es, [N]o, [a]ll, [q]uit`
-
 #### Parallel Processing
 
 To speed up formatting on large projects, you can run the formatter on multiple files in parallel using the `--workers` or `-w` flag.

@@ -26,11 +26,7 @@ NC='\033[0m'
 declare -a ignore_patterns=()
 declare -a languages_to_format=()
 DRY_RUN=false
-INTERACTIVE=false
 USE_GITIGNORE=true
-
-# file to signal 'all' in interactive mode to child processes, if we go parallel with it.
-INTERACTIVE_ALL_FILE=""
 
 # determine the number of CPU cores for default workers
 if command -v getconf &>/dev/null && getconf _NPROCESSORS_ONLN &>/dev/null; then
@@ -59,7 +55,6 @@ usage() {
 	echo "  -I, --ignore PATTERN    Ignore files or directories matching PATTERN (glob)."
 	echo "                          Can be specified multiple times. E.g., -I 'dist/*' -I '*.log'"
 	echo "  -c, --check             Run in 'dry run' mode. Print files that would be formatted."
-	echo "  -i, --interactive       Prompt before formatting each file."
 	echo "  -w, --workers NUM       Number of parallel workers to run. Defaults to the number of CPU cores."
 	echo "      --no-gitignore      Do not respect .gitignore files."
 	echo "  -h, --help              Display this help message and exit."
@@ -172,19 +167,6 @@ format_bash() {
 			return
 		fi
 
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file_path? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
-		fi
-
 		if $DRY_RUN; then
 			if ! shfmt -d "$file_path"; then
 				echo -e "${YELLOW}Would reformat:${NC} $file_path"
@@ -207,14 +189,10 @@ format_bash() {
 
 		local find_cmd=(find "$directory" "${prune_args[@]}" -o -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.dash" -o -name "*.ksh" -o -name "*.zsh" \) -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do reformat_file "$file"; done
-		else
-			export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "{}"'
-		fi
+		export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "{}"'
 	}
 
 	if ! command -v shfmt &>/dev/null; then
@@ -248,19 +226,6 @@ format_python_file() {
 		return
 	fi
 
-	if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-		read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-		case "$choice" in
-		y | Y) ;;
-		a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-		q | Q) exit 0 ;;
-		*)
-			echo "Skipping."
-			return
-			;;
-		esac
-	fi
-
 	if $DRY_RUN; then
 		if ! black --check --diff "$file"; then
 			echo -e "${YELLOW}Would reformat:${NC} $file"
@@ -286,14 +251,10 @@ format_python() {
 
 		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.py" -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_python_file "$file"; done
-		else
-			export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "{}"'
-		fi
+		export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "{}"'
 	elif [[ -f "$path" && "$path" == *.py ]]; then
 		format_python_file "$path"
 	else
@@ -319,19 +280,6 @@ format_javascript() {
 		if is_user_ignored "$file"; then
 			echo -e "${YELLOW}Skipping ignored file (user):${NC} $file"
 			return
-		fi
-
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
 		fi
 
 		if $DRY_RUN; then
@@ -370,14 +318,10 @@ format_javascript() {
 
 		local find_cmd=(find "${find_args[@]}" -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_js_file "$file"; done
-		else
-			export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "{}"'
-		fi
+		export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "{}"'
 	elif [[ -f "$path" ]]; then
 		is_supported=false
 		for ext in $(echo "$prettier_extensions" | tr ',' ' '); do
@@ -418,19 +362,6 @@ format_clang() {
 			return
 		fi
 
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
-		fi
-
 		if $DRY_RUN; then
 			if ! clang-format "$file" | diff -q "$file" - >/dev/null; then
 				echo -e "${YELLOW}Changes detected in:${NC} $file"
@@ -453,14 +384,10 @@ format_clang() {
 
 		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.m" -o -name "*.mm" -o -name "*.java" \) -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_file "$file"; done
-		else
-			export -f format_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "{}"'
-		fi
+		export -f format_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "{}"'
 	elif [[ -f "$path" ]]; then
 		case "$path" in
 		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
@@ -497,19 +424,6 @@ format_go() {
 			return
 		fi
 
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
-		fi
-
 		if $DRY_RUN; then
 			if ! gofmt "$file" | diff -q "$file" - >/dev/null; then
 				echo -e "${YELLOW}Changes detected in:${NC} $file"
@@ -532,14 +446,10 @@ format_go() {
 
 		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.go" -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_go_file "$file"; done
-		else
-			export -f format_go_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "{}"'
-		fi
+		export -f format_go_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "{}"'
 	elif [[ -f "$path" && "$path" == *.go ]]; then
 		echo -e "${BLUE}Formatting Go file:${NC} $path"
 		format_go_file "$path"
@@ -580,19 +490,6 @@ format_rust() {
 			return
 		fi
 
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
-		fi
-
 		if $DRY_RUN; then
 			if ! rustfmt --check "$file"; then
 				echo -e "${YELLOW}Would reformat:${NC} $file"
@@ -626,18 +523,6 @@ format_rust() {
 					return
 				fi
 
-				if $INTERACTIVE; then
-					read -p "Format entire Rust project in $cargo_root? [y]es, [N]o, [q]uit: " choice
-					case "$choice" in
-					y | Y) ;;
-					q | Q) exit 0 ;;
-					*)
-						echo "Skipping project."
-						return
-						;;
-					esac
-				fi
-
 				if cargo fmt; then
 					echo -e "${GREEN}Formatted project:${NC} $cargo_root"
 				else
@@ -651,14 +536,10 @@ format_rust() {
 
 			local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.rs" -print0)
 
-			if $INTERACTIVE; then
-				"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_rust_file "$file"; done
-			else
-				export -f format_rust_file is_ignored_by_git is_user_ignored in_git_repo
-				export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-				export ignore_patterns
-				"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "{}"'
-			fi
+			export -f format_rust_file is_ignored_by_git is_user_ignored in_git_repo
+			export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
+			export ignore_patterns
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "{}"'
 		fi
 	elif [[ -f "$path" && "$path" == *.rs ]]; then
 		echo -e "${BLUE}Formatting Rust file:${NC} $path"
@@ -689,19 +570,6 @@ format_swift() {
 			return
 		fi
 
-		if $INTERACTIVE && ! [ -f "$INTERACTIVE_ALL_FILE" ]; then
-			read -p "Format $file? [y]es, [N]o, [a]ll, [q]uit: " choice
-			case "$choice" in
-			y | Y) ;;
-			a | A) touch "$INTERACTIVE_ALL_FILE" ;;
-			q | Q) exit 0 ;;
-			*)
-				echo "Skipping."
-				return
-				;;
-			esac
-		fi
-
 		if $DRY_RUN; then
 			if ! swift-format lint --strict "$file" >/dev/null 2>&1; then
 				echo -e "${YELLOW}Would reformat:${NC} $file"
@@ -723,14 +591,10 @@ format_swift() {
 
 		local find_cmd=(find "$path" "${prune_args[@]}" -o -type f -name "*.swift" -print0)
 
-		if $INTERACTIVE; then
-			"${find_cmd[@]}" | while IFS= read -r -d '' file; do format_swift_file "$file"; done
-		else
-			export -f format_swift_file is_ignored_by_git is_user_ignored in_git_repo
-			export GREEN NC YELLOW RED BLUE DRY_RUN INTERACTIVE INTERACTIVE_ALL_FILE resolved_path USE_GITIGNORE
-			export ignore_patterns
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "{}"'
-		fi
+		export -f format_swift_file is_ignored_by_git is_user_ignored in_git_repo
+		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
+		export ignore_patterns
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "{}"'
 	elif [[ -f "$path" && "$path" == *.swift ]]; then
 		echo -e "${BLUE}Formatting Swift file:${NC} $path"
 		format_swift_file "$path"
@@ -840,7 +704,7 @@ main() {
 	fi
 
 	local options
-	options=$(getopt -o hcil:I:w: --long help,check,interactive,languages:,ignore:,workers:,no-gitignore -n "$0" -- "$@")
+	options=$(getopt -o hcl:I:w: --long help,check,languages:,ignore:,workers:,no-gitignore -n "$0" -- "$@")
 	if [ $? -ne 0 ]; then
 		usage
 		return 1
@@ -856,10 +720,6 @@ main() {
 			;;
 		-c | --check)
 			DRY_RUN=true
-			shift
-			;;
-		-i | --interactive)
-			INTERACTIVE=true
 			shift
 			;;
 		-w | --workers)
@@ -888,23 +748,6 @@ main() {
 			;;
 		esac
 	done
-
-	if $DRY_RUN && $INTERACTIVE; then
-		echo -e "${RED}Error: --check and --interactive options cannot be used together.${NC}"
-		return 1
-	fi
-
-	if $INTERACTIVE && [[ "$WORKERS" -gt 1 ]]; then
-		echo -e "${YELLOW}Warning: Interactive mode is not compatible with parallel workers. Forcing workers to 1.${NC}"
-		WORKERS=1
-	fi
-
-	if $INTERACTIVE; then
-		# create a temp file to signal the 'all' option has been selected.
-		INTERACTIVE_ALL_FILE=$(mktemp)
-		# ensure the temp file is removed on exit
-		trap 'rm -f "$INTERACTIVE_ALL_FILE"' EXIT
-	fi
 
 	local path="$1"
 
