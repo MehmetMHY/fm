@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # uninstall.sh - Uninstallation script for fm code formatter
 # Copyright (C) 2025 Mehmet Yilmaz
 #

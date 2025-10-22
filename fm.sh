@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # fm - A script to format code in various languages
 # Copyright (C) 2025 Mehmet Yilmaz
 #

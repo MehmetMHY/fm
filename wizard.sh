@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # wizard.sh - Interactive installation wizard for fm code formatter
 # Copyright (C) 2025 Mehmet Yilmaz
 #
@@ -27,7 +28,7 @@ ask_to_install() {
 }
 
 if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
-	# NOTE: Termux uses $PREFIX/bin/
+	# termux uses $PREFIX/bin/
 	INSTALL_DIR="$PREFIX/bin"
 else
 	INSTALL_DIR="/usr/local/bin"

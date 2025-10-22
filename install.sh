@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # install.sh - Installation script for fm code formatter
 # Copyright (C) 2025 Mehmet Yilmaz
 #
@@ -15,9 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-# Set install directory based on environment
+# set install directory based on environment
 if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
-	INSTALL_DIR="$PREFIX/bin" # Termux uses $PREFIX/bin
+	# termux uses $PREFIX/bin
+	INSTALL_DIR="$PREFIX/bin"
 else
 	INSTALL_DIR="/usr/local/bin"
 fi
@@ -203,7 +205,7 @@ else
 	echo "Please ensure all dependencies are installed manually."
 fi
 
-# Check for Rust and rustfmt
+# check for Rust and rustfmt
 if ! command -v rustfmt &>/dev/null; then
 	echo "rustfmt not found."
 	if command -v rustup &>/dev/null; then
@@ -214,7 +216,7 @@ if ! command -v rustfmt &>/dev/null; then
 	fi
 fi
 
-# Check for swift-format
+# check for swift-format
 if ! command -v swift-format &>/dev/null; then
 	echo "swift-format not found."
 	if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
