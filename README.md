@@ -14,7 +14,7 @@
 - [rustfmt](https://github.com/rust-lang/rustfmt) _(installed with Rustup)_
 - [swift-format](https://github.com/swiftlang/swift-format)
 
-The `install.sh` script will attempt to install these for you using your system's package manager.
+The `install.sh` script will attempt to install these for you using your system's package manager. If `fm` is already installed, running `install.sh` will update your existing dependencies instead.
 
 ## Supported Operating Systems
 
@@ -80,13 +80,13 @@ Support for formatting **HTML** and **CSS** files was heavily considered, but no
 # clone the repository and navigate into it
 git clone https://github.com/MehmetMHY/fm.git && cd fm
 
-# run the install script
+# run the install script (or update dependencies if already installed)
 bash install.sh
 ```
 
-### Custom Install
+### Custom Install / Interactive Update
 
-This is **optional**, but for a more controlled installation where you're prompted for each dependency:
+This is **optional**, but for a more controlled installation or update where you're prompted for each dependency:
 
 ```bash
 bash wizard.sh
