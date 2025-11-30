@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+# handle Ctrl+C to kill all child processes
+trap 'kill $(jobs -p) 2>/dev/null; exit 130' INT
+
 ask_to_install() {
 	read -p "Do you want to install $1 ($2)? [y/N] " choice
 	case "$choice" in

@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+# handle Ctrl+C to kill all child processes
+trap 'kill $(jobs -p) 2>/dev/null; exit 130' INT
+
 # set install directory based on environment
 if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
 	# termux uses $PREFIX/bin
