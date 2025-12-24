@@ -89,7 +89,13 @@ bash install.sh
 This is **optional**, but for a more controlled installation or update where you're prompted for each dependency:
 
 ```bash
-bash wizard.sh
+bash install.sh -w
+```
+
+Or using the long form:
+
+```bash
+bash install.sh --wizard
 ```
 
 ### Uninstall
