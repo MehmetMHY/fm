@@ -72,6 +72,23 @@ ask_to_update() {
 	return 0
 }
 
+# Pip3 install helper function
+safe_pip_install() {
+	local package="$1"
+	local upgrade_flag=""
+	if [[ "$2" == "--upgrade" ]]; then
+		upgrade_flag="--upgrade"
+	fi
+
+	if ! command -v pip3 &>/dev/null; then
+		echo "Error: pip3 not found. Cannot install $package."
+		return 1
+	fi
+
+	pip3 install $upgrade_flag "$package"
+	return $?
+}
+
 # set install directory based on environment
 if [[ -n "$PREFIX" ]] && command -v pkg &>/dev/null; then
 	# termux uses $PREFIX/bin
@@ -181,8 +198,8 @@ elif command -v brew &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -318,8 +335,8 @@ elif command -v pacman &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -380,8 +397,8 @@ elif command -v yum &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -434,8 +451,8 @@ elif command -v dnf &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -488,8 +505,8 @@ elif command -v zypper &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -538,8 +555,8 @@ elif command -v emerge &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -586,8 +603,8 @@ elif command -v xbps-install &>/dev/null; then
 		fi
 		if command -v black &>/dev/null; then
 			if ask_to_update "black" "python"; then
-				echo "Updating black via pip..."
-				pip install --upgrade --break-system-packages black
+				echo "Updating black..."
+				safe_pip_install black --upgrade
 			fi
 		fi
 	else
@@ -675,13 +692,13 @@ if [[ "$IS_UPDATE" == false ]]; then
 
 	if [[ "$WIZARD_MODE" == true ]]; then
 		if ask_to_install "black" "python"; then
-			echo "Installing black via pip..."
-			pip install --break-system-packages black
+			echo "Installing black..."
+			safe_pip_install black
 		fi
 	else
 		if ! command -v black &>/dev/null; then
-			echo "black not found, installing via pip..."
-			pip install --break-system-packages black
+			echo "black not found, installing..."
+			safe_pip_install black
 		fi
 	fi
 
@@ -713,8 +730,8 @@ else
 
 	if command -v black &>/dev/null; then
 		if ask_to_update "black" "python"; then
-			echo "Updating black via pip..."
-			pip install --upgrade --break-system-packages black
+			echo "Updating black..."
+			safe_pip_install black --upgrade
 		fi
 	fi
 fi
