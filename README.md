@@ -28,7 +28,7 @@ The `install.sh` script will attempt to install these for you using your system'
 - Void Linux (XBPS)
 - Android/Termux (pkg)
 
-**NOTE:** On macOS, GNU `getopt` is required and will be installed automatically. Add `export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"` to your shell profile if needed.
+**NOTE:** On macOS, GNU `getopt` is required and will be installed automatically. The script will auto-detect Homebrew's installation, so no manual PATH configuration is needed in most cases.
 
 ## Supported File Formats
 
@@ -38,6 +38,7 @@ The `install.sh` script will attempt to install these for you using your system'
 .bash
 .dash
 .ksh
+.zsh
 .js
 .jsx
 .ts

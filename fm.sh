@@ -112,13 +112,18 @@ is_user_ignored() {
 	local file="$1"
 	local rel_file
 
+	local -a patterns_local
+	if [[ -n "$IGNORE_PATTERNS_STR" ]]; then
+		IFS=$'\x1F' read -r -a patterns_local <<<"$IGNORE_PATTERNS_STR"
+	fi
+
 	if [[ -n "$resolved_path" && "$file" == "$resolved_path"* ]]; then
 		rel_file="${file#$resolved_path/}"
 	else
 		rel_file="$file"
 	fi
 
-	for pattern in "${ignore_patterns[@]}"; do
+	for pattern in "${patterns_local[@]}"; do
 		if [[ "$rel_file" == $pattern ]]; then
 			return 0
 		fi
@@ -192,7 +197,11 @@ format_bash() {
 
 		export -f reformat_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "{}"'
 	}
 
@@ -254,7 +263,11 @@ format_python() {
 
 		export -f format_python_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "{}"'
 	elif [[ -f "$path" && "$path" == *.py ]]; then
 		format_python_file "$path"
@@ -321,7 +334,11 @@ format_javascript() {
 
 		export -f format_js_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "{}"'
 	elif [[ -f "$path" ]]; then
 		is_supported=false
@@ -387,7 +404,11 @@ format_clang() {
 
 		export -f format_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "{}"'
 	elif [[ -f "$path" ]]; then
 		case "$path" in
@@ -449,7 +470,11 @@ format_go() {
 
 		export -f format_go_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "{}"'
 	elif [[ -f "$path" && "$path" == *.go ]]; then
 		echo -e "${BLUE}Formatting Go file:${NC} $path"
@@ -539,7 +564,12 @@ format_rust() {
 
 			export -f format_rust_file is_ignored_by_git is_user_ignored in_git_repo
 			export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
-			export ignore_patterns
+			# Serialize array with unit separator (Bash can't export arrays)
+			IGNORE_PATTERNS_STR=$(
+				IFS=$'\x1F'
+				echo "${ignore_patterns[*]}"
+			)
+			export IGNORE_PATTERNS_STR
 			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "{}"'
 		fi
 	elif [[ -f "$path" && "$path" == *.rs ]]; then
@@ -594,7 +624,11 @@ format_swift() {
 
 		export -f format_swift_file is_ignored_by_git is_user_ignored in_git_repo
 		export GREEN NC YELLOW RED BLUE DRY_RUN resolved_path USE_GITIGNORE
-		export ignore_patterns
+		IGNORE_PATTERNS_STR=$(
+			IFS=$'\x1F'
+			echo "${ignore_patterns[*]}"
+		)
+		export IGNORE_PATTERNS_STR
 		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "{}"'
 	elif [[ -f "$path" && "$path" == *.swift ]]; then
 		echo -e "${BLUE}Formatting Swift file:${NC} $path"
@@ -691,12 +725,27 @@ has_swift_files() {
 }
 
 main() {
-	# test for gnu getopt
-	getopt --test >/dev/null 2>&1
+	local GETOPT_CMD="getopt"
+
+	$GETOPT_CMD --test >/dev/null 2>&1
+	if [[ $? -ne 4 ]]; then
+		if [[ "$(uname)" == "Darwin" ]] && command -v brew &>/dev/null; then
+			local brew_getopt
+			brew_getopt="$(brew --prefix gnu-getopt 2>/dev/null)/bin/getopt"
+			if [[ -x "$brew_getopt" ]]; then
+				$brew_getopt --test >/dev/null 2>&1
+				if [[ $? -eq 4 ]]; then
+					GETOPT_CMD="$brew_getopt"
+				fi
+			fi
+		fi
+	fi
+
+	$GETOPT_CMD --test >/dev/null 2>&1
 	if [[ $? -ne 4 ]]; then
 		echo -e "${RED}Error: GNU getopt is not available or not in your PATH.${NC}" >&2
 		echo "This script uses GNU getopt to parse command-line options." >&2
-		if [[ $(uname) == "Darwin" ]]; then
+		if [[ "$(uname)" == "Darwin" ]]; then
 			echo "On macOS, you can install it with 'brew install gnu-getopt'." >&2
 			echo "Then, add it to your PATH by adding the following line to your ~/.zshrc or ~/.bash_profile:" >&2
 			echo 'export PATH="$(brew --prefix gnu-getopt)/bin:$PATH"' >&2
@@ -705,7 +754,7 @@ main() {
 	fi
 
 	local options
-	options=$(getopt -o hcl:I:w: --long help,check,languages:,ignore:,workers:,no-gitignore -n "$0" -- "$@")
+	options=$($GETOPT_CMD -o hcl:I:w: --long help,check,languages:,ignore:,workers:,no-gitignore -n "$0" -- "$@")
 	if [ $? -ne 0 ]; then
 		usage
 		return 1
@@ -749,6 +798,12 @@ main() {
 			;;
 		esac
 	done
+
+	IGNORE_PATTERNS_STR=$(
+		IFS=$'\x1F'
+		echo "${ignore_patterns[*]}"
+	)
+	export IGNORE_PATTERNS_STR
 
 	local path="$1"
 
