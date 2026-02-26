@@ -100,6 +100,10 @@ fi
 if command -v fm &>/dev/null; then
 	IS_UPDATE=true
 	echo "fm is already installed, updating installed dependencies..."
+	if command -v pip3 &>/dev/null; then
+		echo "Upgrading pip..."
+		pip3 install --upgrade pip
+	fi
 else
 	IS_UPDATE=false
 fi
