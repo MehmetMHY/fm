@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+# resolve the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # handle Ctrl+C to kill all child processes
 trap 'kill $(jobs -p) 2>/dev/null; exit 130' INT
 
@@ -745,6 +748,6 @@ if [[ ! -d "$INSTALL_DIR" ]]; then
 	exit 1
 fi
 
-cp fm.sh "$INSTALL_DIR/fm"
+cp "$SCRIPT_DIR/fm.sh" "$INSTALL_DIR/fm"
 chmod +x "$INSTALL_DIR/fm"
 echo "Installation completed successfully!"
