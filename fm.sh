@@ -202,7 +202,7 @@ format_bash() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'reformat_file "$1"' _ "{}"
 	}
 
 	if ! command -v shfmt &>/dev/null; then
@@ -268,7 +268,7 @@ format_python() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_python_file "$1"' _ "{}"
 	elif [[ -f "$path" && "$path" == *.py ]]; then
 		format_python_file "$path"
 	else
@@ -339,7 +339,7 @@ format_javascript() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_js_file "$1"' _ "{}"
 	elif [[ -f "$path" ]]; then
 		is_supported=false
 		for ext in $(echo "$prettier_extensions" | tr ',' ' '); do
@@ -409,7 +409,7 @@ format_clang() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_file "$1"' _ "{}"
 	elif [[ -f "$path" ]]; then
 		case "$path" in
 		*.c | *.cpp | *.h | *.hpp | *.m | *.mm | *.java)
@@ -475,7 +475,7 @@ format_go() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_go_file "$1"' _ "{}"
 	elif [[ -f "$path" && "$path" == *.go ]]; then
 		echo -e "${BLUE}Formatting Go file:${NC} $path"
 		format_go_file "$path"
@@ -570,7 +570,7 @@ format_rust() {
 				echo "${ignore_patterns[*]}"
 			)
 			export IGNORE_PATTERNS_STR
-			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "{}"'
+			"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_rust_file "$1"' _ "{}"
 		fi
 	elif [[ -f "$path" && "$path" == *.rs ]]; then
 		echo -e "${BLUE}Formatting Rust file:${NC} $path"
@@ -629,7 +629,7 @@ format_swift() {
 			echo "${ignore_patterns[*]}"
 		)
 		export IGNORE_PATTERNS_STR
-		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "{}"'
+		"${find_cmd[@]}" | xargs -0 -P "$WORKERS" -I{} bash -c 'format_swift_file "$1"' _ "{}"
 	elif [[ -f "$path" && "$path" == *.swift ]]; then
 		echo -e "${BLUE}Formatting Swift file:${NC} $path"
 		format_swift_file "$path"
@@ -806,6 +806,11 @@ main() {
 	export IGNORE_PATTERNS_STR
 
 	local path="$1"
+
+	if ! [[ "$WORKERS" =~ ^[1-9][0-9]*$ ]]; then
+		echo -e "${RED}Error: --workers must be a positive integer.${NC}"
+		return 1
+	fi
 
 	if [[ -z "$path" ]]; then
 		read -p "No path provided. Use current dir (hit ENTER to continue)? " confirm

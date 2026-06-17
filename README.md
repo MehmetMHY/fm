@@ -45,6 +45,8 @@ The `install.sh` script will attempt to install these for you using your system'
 .tsx
 .json
 .md
+.html
+.css
 .yml
 .yaml
 .graphql
@@ -71,7 +73,7 @@ There is consideration for supporting additional languages based on community de
 - PHP ([PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer))
 - C# ([Csharpier](https://github.com/belav/csharpier))
 
-Support for formatting **HTML** and **CSS** files was heavily considered, but no suitable solution exists that meets the project's standards. So, sadly, support for **HTML** and **CSS** will not happen any time soon.
+HTML and CSS files are currently formatted through Prettier.
 
 ## Installation
 
@@ -163,6 +165,8 @@ fm --ignore '*.log' .
 #### Dry Run Mode
 
 To see which files would be changed without actually modifying them, use the `--check` or `-c` flag. This is useful for CI checks or pre-commit hooks.
+
+Note: `--check` currently reports files that would be reformatted, but it may still exit with status `0`. Until this is fixed, do not rely on the exit status alone for strict CI or pre-commit enforcement.
 
 ```bash
 # check for files that need formatting

@@ -748,6 +748,14 @@ if [[ ! -d "$INSTALL_DIR" ]]; then
 	exit 1
 fi
 
-cp "$SCRIPT_DIR/fm.sh" "$INSTALL_DIR/fm"
-chmod +x "$INSTALL_DIR/fm"
+if ! cp "$SCRIPT_DIR/fm.sh" "$INSTALL_DIR/fm"; then
+	echo "Error: failed to copy fm to $INSTALL_DIR/fm"
+	exit 1
+fi
+
+if ! chmod +x "$INSTALL_DIR/fm"; then
+	echo "Error: failed to make $INSTALL_DIR/fm executable"
+	exit 1
+fi
+
 echo "Installation completed successfully!"
